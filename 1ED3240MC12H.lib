@@ -1,0 +1,336 @@
+******************************************************************************
+*  Simulation model of 1ED3240MC12H Level 1 for SIMetrix version 8.3g or higher
+*  Version: 01.00 (Revision: 757)
+*  (C) Copyright 2020 Infineon Technologies. All rights reserved. 
+*
+******************************************************************************
+*  Model performance : 
+*  - Static Electrical Characteristics and Dynamic Electrical Characteristics 
+*    are modeled with the typical values from the datasheet.
+*  - Temperature effects are not modeled
+*
+*  The following features have been modeled :
+*  - Switching Characteristics such as propagation delay, peak currents
+*  - Undervoltage lockout 
+*
+******************************************************************************
+* PINS:
+*  --------------------------------------------------------------------------
+*  | NAME | DESCRIPTION 
+*  --------------------------------------------------------------------------
+*  | VCC1 | Positive logic supply 
+*  --------------------------------------------------------------------------
+*  | NINF | Driver input(active low) 
+*  --------------------------------------------------------------------------
+*  | IN   | Logic input for  gate driver output (HO), in phase with HO 
+*  --------------------------------------------------------------------------
+*  | GND1 | Logic ground 
+*  --------------------------------------------------------------------------
+*  | VCC2 | Positive power supply output side 
+*  --------------------------------------------------------------------------
+*  | OUT  | Gate drive output 
+*  --------------------------------------------------------------------------
+*  | OUTF | Additional driver output 
+*  --------------------------------------------------------------------------
+*  | VEE2 | Power ground 
+*  --------------------------------------------------------------------------
+*
+******************************************************************************
+* DISCLAIMER
+* 
+* INFINEON’S MODEL TERMS OF USE
+*
+* BY DOWNLOADING AND/OR USING THIS INFINEON MODEL (“MODEL”), THE USER
+* (INCLUDING YOU) AGREES TO BE BOUND BY THE TERMS OF USE HERE STATED. IF USER
+* DOES NOT AGREE TO ALL TERMS OF USE HERE STATED, USER SHALL NOT DOWNLOAD,
+* USE OR COPY THE MODEL BUT IMMEDIATELY DELETE IT (TO THE EXTENT THAT IT
+* WAS DOWNLOADED ALREADY).
+*
+* 1. SCOPE OF USE
+* 1.1 Any use of this Model provided by Infineon Technologies AG is subject
+*     to these Terms of Use.
+* 1.2 This Model, provided by Infineon, does not fully represent all of the
+*     specifications and operating characteristics of the product to which
+*     this Model relates.
+* 1.3 This Model only describes the characteristics of a typical product.
+*     In all cases, the current data sheet information for a given product
+*     is the final design guideline and the only actual performance
+*     specification. Although this Model can be a useful tool to evaluate
+*     the product performance, it cannot simulate the exact product performance
+*     under all conditions and it is also not intended to replace
+*     bread-boarding for final verification.
+*
+* 2. IMPORTANT NOTICE
+* 2.1 Infineon Technologies AG (“Infineon”) is not and cannot be aware of the
+*     specific application of the Infineon’s Model by User. However, Model may
+*     from time to time be used by User in potentially harmful and/or life-
+*     endangering applications such as traffic, logistic, medical, nuclear
+*     or military applications or in other applications where failure of the
+*     Model may predictably cause damage to persons’ life or health or to
+*     property (hereinafter "Critical Applications").
+* 2.2 User acknowledges that Infineon has not specifically designed or
+*     qualified the Model for Critical Applications that the Model may contain
+*     errors and bugs and that User is required to qualify the Model for
+*     Critical Applications pursuant to the applicable local quality, safety
+*     and legal requirements before permitting or giving access to any such use.
+*
+* 3. CONFIDENTIAL INFORMATION
+*     User shall treat ideas, concepts and information incorporated in the
+*     Model, the documentation and the content of this Terms of Use (together
+*     hereinafter "Confidential Information") confidential, not disclose it to
+*     any third party unless otherwise agreed in writing between User and
+*     Infineon, not use it for any other purposes than using the Model for
+*     simulation and testing purposes only.
+*
+* 4. WARRANTY
+* 4.1 User acknowledges that the Model is provided by Infineon under this Terms	       
+*     of Use is provided free of charge and "AS IS" without any warranty or 	      
+*     liability of any kind and Infineon hereby expressly disclaims any 		      
+*     warranties or representations, whether express, implied, statutory or 	      
+*     otherwise, including but not limited to warranties of workmanship, 		      
+*     merchantability, fitness for a particular purpose, defects in the 		      
+*     Model, or non-infringement of third parties intellectual property rights.	       
+* 4.2 Infineon reserves the right to make corrections, deletions, modifications, 	      
+*     enhancements, improvements and other changes to the Model at any time 	      
+*     or to move or discontinue any Model without notice. 			      
+* 										      
+* 5. LIABILITY 									      
+* 5.1 Nothing in this Terms of Use shall limit or exclude Infineon's liability 	      
+*     under mandatory liability laws, for injuries to life, body or health,  	      
+*     for fraudulent concealment of defects in the software, or in cases 		      
+*     of Infineon's intentional misconduct or gross negligence. 			      
+* 5.2 Without prejudice to Sections 5.1, in cases of Infineon's slight		       
+*     negligent breach of obligations that restrict essential rights or duties 	      
+*     arising from the nature of this Terms of Use in a way that there is a 	      
+*     risk of non-achievement of the purpose of this Terms of Use or of an 	      
+*     obligation whose observance User regularly may trust in and whereas		       
+*     compliance with only makes proper execution of this Terms of Use 		      
+*     possible, Infineon's liability shall be limited to the typically, 		      
+*     foreseeable damage. 							      
+* 5.3 Without prejudice to Sections 8.1 and 8.2, Infineon's liability under 	      
+*     this Agreement shall be excluded in all other cases. 			      
+* 										      
+* 6. EXPORT REGULATIONS 								      
+*     The User shall comply with all applicable national and international 	      
+*     laws and regulations, in particular the applicable export control 		      
+*     regulations and sanction programs. The User also agrees not to 		      
+*     export, re-export or transfer any software or technology developed		       
+*     with or using information, software or technology offered by Infineon, 	      
+*     in violation of any applicable laws or regulations of the competent 	      
+*     authorities. Further, the User shall neither use any products, 		      
+*     information, software and technology offered by Infineon in or in 		      
+*     connection with nuclear technology or weapons of mass destruction 		      
+*     (nuclear, biological or chemical) and carriers thereof nor supply 		      
+*     military consignees. 							      
+* 										      
+* 7. TERMINATION OF USE PERMIT 							      
+*     If the User violates these Terms of Use, such User’s permit to use 		      
+*     this Model terminates automatically. In addition, Infineon may 		      
+*     terminate the User’s permit to use this Model at its discretion and 	      
+*     at any time regardless of any violation of these Terms of Use. In 		      
+*     any of the foregoing events, the User is obliged to immediately destroy 	      
+*     any content that has been downloaded or printed from Infineon’s website. 	      
+* 										      
+* 8. MISCELLANEOUS 								      
+* 8.1 These Terms of Use are subject to the laws of the Federal Republic 		      
+*     of Germany with the exception of the United Nations on Purchase 		      
+*     Contracts on the International Sale of Goods dated April 11, 1980 (CISG). 	      
+*     The exclusive place of jurisdiction is Munich, Germany. 			      
+* 8.2 Should any provision in these Terms of Use be or become invalid, the 	      
+*     validity of all other provisions or agreements shall remain unaffected
+*     thereby.
+*
+******************************************************************************
+.SUBCKT 1ED3240MC12H VCC1 NINF IN GND1 VCC2 OUT OUTF VEE2
+X_DRIVER VCC1 IN NINF GND1 VCC2 OUT OUTF VEE2 ONE_ED3240MC12H_GD_CT_TEMPLATE
+D_GND1_INP GND1 IN ONE_ED3240MC12H_DZ_ESD_18
+D_GND1_INN GND1 NINF ONE_ED3240MC12H_DZ_ESD_18
+D_GND1_VCC1 GND1 VCC1 ONE_ED3240MC12H_DZ_ESD_18
+D_GND2_VCC2 VEE2 VCC2 ONE_ED3240MC12H_DZ_ESD_40
+.MODEL ONE_ED3240MC12H_DZ_ESD_18 D( IS=1.0E-9 N=1.0 RS=10 BV=18 IBV=5.0E-3 XTI=0)
+.MODEL ONE_ED3240MC12H_DZ_ESD_40 D( IS=1.0E-9 N=1.0 RS=10 BV=40 IBV=5.0E-3 XTI=0)
+RGND VEE2 GND1 10MEG
+CGND VEE2 GND1 5P
+C_VCC1 VCC1 GND1 10F
+C_NINF VCC1 GND1 10F
+C_IN IN GND1 10F
+C_VCC2 VCC2 VEE2 10F
+C_OUT OUT VEE2 10F
+C_OUTF OUTF VEE2 10F
+.ENDS
+.SUBCKT ONE_ED3240MC12H_GD_CT_TEMPLATE VCC1 IN NINF GND1 VCC2 OUT OUTF GND2 PARAMS: P_C_PW_MIN=1.1683287024336693E-08 P_INH_TH=2.1 
++ P_INL_TH=1.2 P_R_INP=75E+03 P_R_NINF=75E+03 P_VCC1_UVH=2.85 P_VCC1_UVL=2.65 P_VCC2_UVH=11.8 P_VCC2_UVL=10.8 P_C_UVL_START=1.072E-06 
++ P_C_UVL_RDYC=1E-12 P_C_TDP=3.4528E-9 P_R_RISE=0.65K P_C_RISE=7.8P P_R_FALL=0.65K P_C_FALL=4.2P P_WH=1M P_LH=1U P_LAMBDAH=0.11 P_KPH=
++ 260U P_VTOH=-1 P_RBH=10 P_VGSH=5.0 P_RGH=1 P_CGSOH=100P P_WL=1M P_LL=1U P_LAMBDAL=0.11 P_KPL=405U P_VTOL=1 P_RBL=1 P_VGSL=4.2 P_RGL=
++ 1 P_CGSOL=100P P_IQ1=1.2E-03 P_IQ2=1.9E-03 P_IS=1E-15 P_N=0.863 P_RS=0.3
+X_IN VCC1 IN NINF IND NINFD GND1 ONE_ED3240MC12H_INPUT_TH PARAMS: P_INH_TH={P_INH_TH} P_INL_TH={P_INL_TH} P_C_PW_MIN={P_C_PW_MIN} 
++ P_R_INP={P_R_INP} P_R_NINF={P_R_NINF}
+X_UVL_VCC1 VCC1 UVL1_DEL GND1 ONE_ED3240MC12H_UVL_VCC PARAMS: P_VCC_UVH={P_VCC1_UVH} P_VCC_UVL={P_VCC1_UVL} P_C_UVL_START=
++ {P_C_UVL_START} P_C_UVL_RDYC={P_C_UVL_RDYC}
+E_PWM PWM 0 VALUE { IF( (V(UVL1_DEL)<0.5 & V(UVL2_DEL)<0.5 & V(IND)>0.5 ), 1,0 ) }
+E_RST_DFF2 RST_DFF2 0 VALUE { IF(V(OUTF) > (V(VCC2,GND2)-1), 0.0, 1.0) }
+E_RST_DFF3 RST_DFF3 0 VALUE { IF(V(OUTF) < 2 , 0.0, 1.0) }
+E_RST_HIZ_ON RST_HIZ_ON 0 VALUE { IF(V(IND) < 0.5 , 0.0 ,1.0 ) }
+E_RST_HIZ_OFF RST_HIZ_OFF 0 VALUE { IF(V(IND) > 0.5 , 0.0 ,1.0 ) }
+E_E1V E1V GND1 VALUE {1}
+X_DFF_2_IND E1V RST_DFF2 IND E1V IND_DFF2_OUT N_IND_DFF2_OUT ONE_ED3240MC12H_DFF_2 PARAMS: P_C_DELAY=1E-10
+X_DFF_3_IND E1V RST_DFF3 IND E1V IND_DFF3_OUT N_IND_DFF3_OUT ONE_ED3240MC12H_DFF_3 PARAMS: P_C_DELAY=1E-10
+E_HIZ_OUTF_ON HIZ_OUTF_ON 0 VALUE {IF( (V(IND_DFF2_OUT)>0.5 & V(NINFD)>0.5 ) , 1.0, 0.0 )}
+E_HIZ_OUTF_OFF HIZ_OUTF_OFF 0 VALUE {IF( (V(IND_DFF3_OUT)>0.5 & V(NINFD)<0.5 ) , 1.0, 0.0 )}
+X_DFF_2_HIZ_ON E1V RST_HIZ_ON HIZ_OUTF_ON E1V HIZ_OUTF_ON_DFF2_OUT N_HIZ_OUTF_ON_DFF2_OUT ONE_ED3240MC12H_DFF_2 PARAMS: P_C_DELAY=1E-10
+X_DFF_2_HIZ_OFF E1V RST_HIZ_OFF HIZ_OUTF_OFF E1V HIZ_OUTF_OFF_DFF2_OUT N_HIZ_OUTF_OFF_DFF2_OUT ONE_ED3240MC12H_DFF_2 PARAMS: P_C_DELAY=
++ 1E-10
+E_HIZ_OUTF_ON_FINAL HIZ_OUTF_ON_FINAL 0 VALUE {IF( V(HIZ_OUTF_ON_DFF2_OUT)> 0.5 & V(OUTF,GND2) <= (V(VCC2,GND2) - 1) , 1.0 , 0.0 )}
+E_HIZ_OUTF_OFF_FINAL HIZ_OUTF_OFF_FINAL 0 VALUE {IF( V(HIZ_OUTF_OFF_DFF2_OUT)> 0.5 & V(OUTF,GND2) >= 2 , 1.0 , 0.0 )}
+X_TDCLAMPH HIZ_OUTF_ON_FINAL HIZ_OUTF_ON_FINAL_DEL ONE_ED3240MC12H_ADV_FILTER PARAMS: P_C_DELAY=2.970892986188473E-07 P_TH_UP=0.05 
++ P_TH_DW=0.95
+X_TDCLAMPL HIZ_OUTF_OFF_FINAL HIZ_OUTF_OFF_FINAL_DEL ONE_ED3240MC12H_ADV_FILTER PARAMS: P_C_DELAY=1.6690410034766703E-08 P_TH_UP=0.95 
++ P_TH_DW=0.05
+E_HIZ_OUTF_ON_FINAL2 HIZ_OUTF_ON_FINAL2 0 VALUE {IF( V(HIZ_OUTF_ON_FINAL)> 0.5 | V(HIZ_OUTF_ON_FINAL_DEL) > 0.5 , 1.0 , 0.0 )}
+E_HIZ_OUTF_OFF_FINAL2 HIZ_OUTF_OFF_FINAL2 0 VALUE {IF( V(HIZ_OUTF_OFF_FINAL)> 0.5 | V(HIZ_OUTF_OFF_FINAL_DEL) > 0.5 , 1.0 , 0.0 )}
+E_HIZ_OUTF HIZ_OUTF 0 VALUE { V(HIZ_OUTF_ON_FINAL2) + V(HIZ_OUTF_OFF_FINAL2) }
+X_UVL_VCC2 VCC2 UVL2_DEL GND2 ONE_ED3240MC12H_UVL_VCC PARAMS: P_VCC_UVH={P_VCC2_UVH} P_VCC_UVL={P_VCC2_UVL} P_C_UVL_START=
++ {P_C_UVL_START} P_C_UVL_RDYC={P_C_UVL_RDYC}
+X_OUT_STAGE PWM HIZ_OUTF GATEN GATEP OUT OUTF VCC2 GND2 ONE_ED3240MC12H_OUT_STAGE PARAMS: P_C_TDP={P_C_TDP} P_R_RISE={P_R_RISE} 
++ P_C_RISE={P_C_RISE} P_R_FALL={P_R_FALL} P_C_FALL={P_C_FALL} P_WH={P_WH} P_LH={P_LH} P_LAMBDAH={P_LAMBDAH} P_KPH={P_KPH} P_VTOH=
++ {P_VTOH} P_RBH={P_RBH} P_VGSH={P_VGSH} P_RGH={P_RGH} P_CGSOH={P_CGSOH} P_WL={P_WL} P_LL={P_LL} P_LAMBDAL={P_LAMBDAL} P_KPL={P_KPL} 
++ P_VTOL={P_VTOL} P_RBL={P_RBL} P_VGSL={P_VGSL} P_RGL={P_RGL} P_CGSOL={P_CGSOL} IS_CL={P_IS} N_CL={P_N} RS_CL={P_RS}
+X_CC_EMULATOR VCC1 VCC2 GND1 GND2 ONE_ED3240MC12H_QUIESCENT_CURRENT PARAMS: P_IQ1={P_IQ1} P_IQ2={P_IQ2}
+.ENDS
+.SUBCKT ONE_ED3240MC12H_INPUT_TH VCC IN NINF IND NINFD GND PARAMS: P_INH_TH=4.0 P_INL_TH=1.0 P_C_PW_MIN=3.0E-9 P_R_INP=1K P_R_NINF=1K
+R_INP_DW IN GND {P_R_INP}
+R_NINF_DW NINF GND {P_R_NINF}
+X_IN IN D_IN GND ONE_ED3240MC12H_STP_IDEAL PARAMS: P_TH_UP={P_INH_TH} P_TH_DW={P_INL_TH}
+X_NINF NINF D_NINF GND ONE_ED3240MC12H_STP_IDEAL PARAMS: P_TH_UP={P_INH_TH} P_TH_DW={P_INL_TH}
+X_INMIN D_IN IND ONE_ED3240MC12H_ADV_FILT PARAMS: P_C_DELAY={P_C_PW_MIN} P_TH_UP=0.95 P_TH_DW=0.05
+X_NINFMIN D_NINF NINFD ONE_ED3240MC12H_ADV_FILT PARAMS: P_C_DELAY=2.0028492041720042E-08 P_TH_UP=0.95 P_TH_DW=0.05
+.ENDS
+.SUBCKT ONE_ED3240MC12H_OUT_STAGE PWM HIZ_OUTF GATEN GATEP OUT OUTF VCC2 GND2 PARAMS: P_C_TDP = 8.5714E-09 P_R_RISE=1K P_C_RISE=1P 
++ P_R_FALL=1K P_C_FALL=1P P_WH=1M P_LH=1U P_LAMBDAH=0.12 P_KPH=10U P_VTOH=-1 P_RBH=1 P_VGSH=10.3 P_RGH=1 P_CGSOH=100P P_WL=1M P_LL=1U 
++ P_LAMBDAL=0.07 P_KPL=30U P_VTOL=1 P_RBL=1 P_VGSL=6.7 P_RGL=1 P_CGSOL=100P IS_CL=1E-15 N_CL=0.8624838364971924 RS_CL=0.3
+X_ONOFF1 PWM ONOFF_D ONE_ED3240MC12H_RC_DELAY_10 PARAMS: P_C_DELAY={P_C_TDP}
+R_ON_DD ONOFF_D ON_DD {P_R_RISE}
+C_ON_DD ON_DD 0 {P_C_RISE}
+R_OFF_DD ONOFF_D OFF_DD {P_R_FALL}
+C_OFF_DD OFF_DD 0 {P_C_FALL}
+E_GATEP VCC2 GATEP VALUE { V(ONOFF_D,0)*{P_VGSH} *V(ON_DD) }
+E_GATEN GATEN GND2 VALUE { (1-V(ONOFF_D,0)) * {P_VGSL} *(1-V(OFF_DD)) }
+M_UP OUT GATEP VCC2 VCC2 ONE_ED3240MC12H_LO_PMOS
+.MODEL ONE_ED3240MC12H_LO_PMOS PMOS ( LEVEL=1 W={P_WH} L={P_LH} CGSO={P_CGSOH} LAMBDA={P_LAMBDAH} KP={P_KPH} VTO={P_VTOH} RB={P_RBH} 
++ RG={P_RGH})
+M_DW OUT GATEN GND2 GND2 ONE_ED3240MC12H_LO_NMOS
+.MODEL ONE_ED3240MC12H_LO_NMOS NMOS ( LEVEL=1 W={P_WL} L={P_LL} CGSO={P_CGSOL} LAMBDA={P_LAMBDAL} KP={P_KPL} VTO={P_VTOL} RB={P_RBL} 
++ RG={P_RGL})
+R_ON_DD_OUTF ONOFF_D ON_DD_OUTF {P_R_RISE}
+C_ON_DD_OUTF ON_DD_OUTF 0 300N
+R_OFF_DD_OUTF ONOFF_D OFF_DD_OUTF {P_R_FALL}
+C_OFF_DD_OUTF OFF_DD_OUTF 0 10N
+E_GATEP_OUTF VCC2 GATEP_OUTF VALUE { ( (1-V(HIZ_OUTF)) * V(ONOFF_D,0)*{P_VGSH} *V(ON_DD) ) }
+E_GATEN_OUTF GATEN_OUTF GND2 VALUE { (1-V(ONOFF_D,0)) * {P_VGSL} *(1-V(OFF_DD))*(1-V(HIZ_OUTF)) }
+M_UP_OUTF OUTF GATEP_OUTF VCC2 VCC2 ONE_ED3240MC12H_LO_PMOS
+M_DW_OUTF OUTF GATEN_OUTF GND2 GND2 ONE_ED3240MC12H_LO_NMOS
+D_CLAMP OUT VCC2 ONE_ED3240MC12H_DCLAMP
+.MODEL ONE_ED3240MC12H_DCLAMP D ( IS={IS_CL} N={N_CL} RS={RS_CL} )
+.ENDS
+.SUBCKT ONE_ED3240MC12H_QUIESCENT_CURRENT VCC1 VCC2 GND1 GND2 PARAMS: P_IQ1=1M P_IQ2=1M
+G_VCC1 VCC1 GND1 VALUE {TABLE(V(VCC1,GND1) , 0,0 , 0.1,1U , 1,100U , 0.8*5,{P_IQ1})}
+R_VCC1 VCC1 GND1 1E+12
+G_QCC VCC2 GND2 VALUE {TABLE(V(VCC2,GND2) , 0,0 , 0.1,1U , 1,100U , 0.8*10,{P_IQ2})}
+R_QCC VCC2 GND2 1E+12
+.ENDS
+.SUBCKT ONE_ED3240MC12H_UVL_VCC1 VCC UVL_DEL GND PARAMS: P_VCC_UVH=1.0 P_VCC_UVL=1.0 P_R_TSTART=1K P_C_TSTART=1P P_TSTART=0.0004 
++ P_TUVL=0.1
+X_UVL VCC UVL GND ONE_ED3240MC12H_STN_IDEAL PARAMS: P_TH_UP={P_VCC_UVH} P_TH_DW={P_VCC_UVL}
+X_UVL_FILTER UVL UVL_DEL ONE_ED3240MC12H_ADV_FILT PARAMS: P_R_DELAY={P_R_TSTART} P_C_DELAY = {P_C_TSTART} P_TH_UP={P_TSTART} P_TH_DW=
++ {P_TUVL}
+.ENDS
+.SUBCKT ONE_ED3240MC12H_UVL_VCC VCC UVL_OUT GND PARAMS: P_VCC_UVH=1 P_VCC_UVL=1 P_C_UVL_START=1E-15 P_TH_STARTDW=0.999 P_TH_STARTUP=
++ 0.001 P_C_UVL_RDYC=1E-15 P_TH_UVLRDYCDW=0.999 P_TH_UVLRDYCUP=0.001
+X_UVL VCC UVL_DET GND ONE_ED3240MC12H_STN_IDEAL PARAMS: P_TH_UP={P_VCC_UVH} P_TH_DW={P_VCC_UVL}
+X_UVL_START UVL_DET UVL_START ONE_ED3240MC12H_ADV_FILT PARAMS: P_C_DELAY={P_C_UVL_START} P_TH_UP={P_TH_STARTDW} P_TH_DW={P_TH_STARTUP}
+X_UVL_UVL1LRDYC UVL_DET UVL_UVL1LRDYC ONE_ED3240MC12H_ADV_FILT PARAMS: P_C_DELAY={P_C_UVL_RDYC} P_TH_UP={P_TH_UVLRDYCDW} P_TH_DW=
++ {P_TH_UVLRDYCUP}
+X_OR UVL_START UVL_UVL1LRDYC UVL_DEL ONE_ED3240MC12H_OR_GATE
+E_UVL_OUT UVL_OUT 0 VALUE { V(UVL_DEL) }
+.ENDS
+.SUBCKT ONE_ED3240MC12H_STP IN VH VL OUT GND
+E_OUTP OUTP 0 VALUE { IF( V(IN,GND)>=V(VH) | V(OUTN)<0.5,1,0 ) }
+E_OUTN OUTN 0 VALUE { IF( V(IN,GND)<=V(VL) | V(OUTP)<0.5,1,0 ) }
+E_OUT OUT 0 VALUE {V(OUTP)}
+.ENDS
+.SUBCKT ONE_ED3240MC12H_STP_IDEAL IN OUT GND PARAMS: P_TH_UP=0.9 P_TH_DW=0.1
+E_UP UP 0 VALUE={IF( V(IN,GND)>={P_TH_UP} | V(DW)<0.5 , 1,0 )}
+E_DW DW 0 VALUE={IF( V(IN,GND)<={P_TH_DW} | V(UP)<0.5 , 1,0 )}
+E_OUT OUT 0 VALUE={V(UP)}
+.ENDS
+.SUBCKT ONE_ED3240MC12H_STN_IDEAL IN OUT GND PARAMS: P_TH_UP=0.9 P_TH_DW=0.1
+E_UP UP 0 VALUE={IF( V(IN,GND)>={P_TH_UP} | V(DW)<0.5 , 1,0 )}
+E_DW DW 0 VALUE={IF( V(IN,GND)<={P_TH_DW} | V(UP)<0.5 , 1,0 )}
+E_OUT OUT 0 VALUE={V(DW)}
+.ENDS
+.SUBCKT ONE_ED3240MC12H_FILTER IN OUT PARAMS: P_R=1 P_C=1E-12
+R_INP IN OUT {P_R}
+C_INP OUT 0 {P_C}
+.ENDS
+.SUBCKT ONE_ED3240MC12H_ADV_FILT IN OUT PARAMS: P_R_DELAY=1 P_C_DELAY=10E-9 P_TH_UP=0.999 P_TH_DW=0.001
+R_RISE IN IN_DEL {P_R_DELAY}
+C_RISE IN_DEL 0 {P_C_DELAY}
+X_CMP IN_DEL OUT 0 ONE_ED3240MC12H_STP_IDEAL PARAMS: P_TH_UP={P_TH_UP} P_TH_DW={P_TH_DW}
+.ENDS
+.SUBCKT ONE_ED3240MC12H_RC_DELAY_10 IN OUT PARAMS: P_C_DELAY = 60E-9 P_TH_TPD = 0.5
+X_D1 IN D1 ONE_ED3240MC12H_RC_DELAY_5 PARAMS: P_C_DELAY = {P_C_DELAY} P_TH_TPD = {P_TH_TPD}
+X_D2 D1 OUT ONE_ED3240MC12H_RC_DELAY_5 PARAMS: P_C_DELAY = {P_C_DELAY} P_TH_TPD = {P_TH_TPD}
+.ENDS
+.SUBCKT ONE_ED3240MC12H_RC_DELAY_5 IN OUT PARAMS: P_C_DELAY = 60E-9 P_TH_TPD = 0.5
+X_D1 IN D1 ONE_ED3240MC12H_RC_DELAY_BASE PARAMS: P_C_DELAY = {P_C_DELAY} P_TH_TPD = {P_TH_TPD}
+X_D2 D1 D2 ONE_ED3240MC12H_RC_DELAY_BASE PARAMS: P_C_DELAY = {P_C_DELAY} P_TH_TPD = {P_TH_TPD}
+X_D3 D2 D3 ONE_ED3240MC12H_RC_DELAY_BASE PARAMS: P_C_DELAY = {P_C_DELAY} P_TH_TPD = {P_TH_TPD}
+X_D4 D3 D4 ONE_ED3240MC12H_RC_DELAY_BASE PARAMS: P_C_DELAY = {P_C_DELAY} P_TH_TPD = {P_TH_TPD}
+X_D5 D4 OUT ONE_ED3240MC12H_RC_DELAY_BASE PARAMS: P_C_DELAY = {P_C_DELAY} P_TH_TPD = {P_TH_TPD}
+.ENDS
+.SUBCKT ONE_ED3240MC12H_RC_DELAY_3 IN OUT PARAMS: P_C_DELAY = 60E-9 P_TH_TPD = 0.5
+X_D1 IN D1 ONE_ED3240MC12H_RC_DELAY_BASE PARAMS: P_C_DELAY = {P_C_DELAY} P_TH_TPD = {P_TH_TPD}
+X_D2 D1 D2 ONE_ED3240MC12H_RC_DELAY_BASE PARAMS: P_C_DELAY = {P_C_DELAY} P_TH_TPD = {P_TH_TPD}
+X_D3 D2 OUT ONE_ED3240MC12H_RC_DELAY_BASE PARAMS: P_C_DELAY = {P_C_DELAY} P_TH_TPD = {P_TH_TPD}
+.ENDS
+.SUBCKT ONE_ED3240MC12H_RC_DELAY_BASE IN OUT PARAMS: P_C_DELAY = 60E-9 P_TH_TPD = 0.5
+R_DELAY IN IND 1
+C_DELAY IND 0 {P_C_DELAY}
+E_DELAY OUT 0 VALUE={IF( V(IND) > {P_TH_TPD} , 1.0,0.0 )}
+.ENDS
+.SUBCKT ONE_ED3240MC12H_OR_GATE IN1 IN2 OUT
+E_OUT OUT_INT 0 VALUE { IF( (V(IN1,0)>0.5 | V(IN2,0)>0.5), 1,0 ) }
+R_OUT OUT_INT OUT 10
+C_OUT OUT 0 1E-12
+.ENDS
+.SUBCKT ONE_ED3240MC12H_DFF_2 PREB CLRB CLK D Q QN PARAMS: P_C_DELAY=2E-9
+R_Q Q 0 1E12
+R_QN QN 0 1E12
+R1 D 0 1E9
+R2 CLK 0 1E9
+R3 CLRB 0 1E9
+R4 PREB 0 1E9
+X1 CLK CLK_DEL ONE_ED3240MC12H_ADV_FILTER PARAMS: P_C_DELAY={P_C_DELAY}
+E_Q Q 0 VALUE={ IF( V(PREB) <0.5 & V(CLRB) > 0.5 , 1,IF( V(PREB) > 0.5 & V(CLRB) > 0.5 & V(CLK,CLK_DEL)>0.1 & V(D) > 0.5 ,1, IF(V(
++ QN) > 0.5 ,0,1))) }
+E_QN QN 0 VALUE={IF( (V(PREB) > 0.5 & V(CLRB) < 0.5 ) | TIME <1NS,1 , IF(V(PREB) > 0.5 & V(CLRB) > 0.5 & V(CLK,CLK_DEL) > 0.1 & V(D)
++  < 0.5 , 1, IF( V(Q) > 0.5 , 0, 1))) }
+.ENDS ONE_ED3240MC12H_DFF_2
+.SUBCKT ONE_ED3240MC12H_DFF_3 PREB CLRB CLK D Q QN PARAMS: P_C_DELAY=5E-9
+R_Q Q 0 1E12
+R_QN QN 0 1E12
+R1 D 0 1E9
+R2 CLK 0 1E9
+R3 CLRB 0 1E9
+R4 PREB 0 1E9
+X1 CLK CLK_DEL ONE_ED3240MC12H_ADV_FILTER PARAMS: P_C_DELAY={P_C_DELAY}
+E_Q Q 0 VALUE={ IF( V(PREB) <0.5 & V(CLRB) > 0.5 , 1,IF( V(PREB) > 0.5 & V(CLRB) > 0.5 & V(CLK,CLK_DEL) < -0.1 & V(D) > 0.5 ,1, IF(
++ V(QN) > 0.5 ,0,1))) }
+E_QN QN 0 VALUE={IF( (V(PREB) > 0.5 & V(CLRB) < 0.5 ) | TIME <1NS,1 , IF(V(PREB) > 0.5 & V(CLRB) > 0.5 & V(CLK,CLK_DEL) < -0.1 & V(
++ D) < 0.5 , 1, IF( V(Q) > 0.5 , 0, 1))) }
+.ENDS ONE_ED3240MC12H_DFF_3
+.SUBCKT ONE_ED3240MC12H_ADV_FILTER IN OUT PARAMS: P_R_DELAY=1 P_C_DELAY=10E-9 P_TH_UP=0.999 P_TH_DW=0.001
+R_RISE IN IN_DEL {P_R_DELAY}
+C_RISE IN_DEL 0 {P_C_DELAY}
+X_CMP IN_DEL OUT 0 ONE_ED3240MC12H_STP_IDEAL PARAMS: P_TH_UP={P_TH_UP} P_TH_DW={P_TH_DW}
+.ENDS ONE_ED3240MC12H_ADV_FILTER

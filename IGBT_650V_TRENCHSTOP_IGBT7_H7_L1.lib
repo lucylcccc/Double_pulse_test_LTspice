@@ -1,0 +1,560 @@
+*******************************************************************************
+*  Behavioral model of DuoPacks Trenchstop H7 with EMCON E7 Level 1 Version 2
+*  for SPICE compatible simulators
+*  (C) Copyright 2024 Infineon Tehnologies. All rights reserved.
+*
+*******************************************************************************
+*  Model performance :
+*  The Level 1 model is based on a behavioral description. The calibration is
+*  done with respect to the latest datasheet content. The transient calibration
+*  procedure is based on the "Dynamic test circuit", which is stated in the
+*  latest datasheet using the information of parasitic elements and nominal
+*  conditions given in the table "Switching Characteristic, Inductive Load".
+*  The usage of the compact models is restricted to a temperature range between
+*  25°C and the maximum allowed junction temperature, which is stated in the
+*  corresponding data sheet. 
+*  The static temperature of the model can be set by using the SPICE command
+*  ".TEMP" in the simulator interface.
+*******************************************************************************
+* PINS:
+* -----------------------------------------------------------------------------
+* | PIN | DESCRIPTION
+* -----------------------------------------------------------------------------
+* | C   | IGBT collector for single devices and DuoPacks
+* -----------------------------------------------------------------------------
+* | G   | IGBT gate for single devices and DuoPacks
+* -----------------------------------------------------------------------------
+* | E   | IGBT emitter for single devices and DuoPacks
+* -----------------------------------------------------------------------------
+* | K   | IGBT Kelvin emitter sense for single devices and DuoPacks
+* -----------------------------------------------------------------------------
+*******************************************************************************
+* Product		Device type		Vce/V	Ic/A	Package		L1-model name
+* -----------------------------------------------------------------------------
+* IKWH40N65EH7		DuoPack		650		40		PG-TO247-3	IKWH40N65EH7_L1
+* IKWH50N65EH7		DuoPack		650		50		PG-TO247-3	IKWH50N65EH7_L1
+* IKWH75N65EH7		DuoPack		650		75		PG-TO247-3	IKWH75N65EH7_L1
+* IKWH100N65EH7		DuoPack		650		100		PG-TO247-3	IKWH100N65EH7_L1
+* IKQ120N65EH7		DuoPack		650		120		PG-TO247-3	IKQ120N65EH7_L1
+* IKQ150N65EH7		DuoPack		650		150		PG-TO247-3	IKQ150N65EH7_L1
+* IKZA40N65EH7		DuoPack		650		40		PG-TO247-4	IKZA40N65EH7_L1
+* IKZA50N65EH7		DuoPack		650		50		PG-TO247-4	IKZA50N65EH7_L1
+* IKZA75N65EH7		DuoPack		650		75		PG-TO247-4	IKZA75N65EH7_L1
+* IKZA100N65EH7		DuoPack		650		100		PG-TO247-4	IKZA100N65EH7_L1
+* IKY120N65EH7		DuoPack		650		120		PG-TO247-4	IKY120N65EH7_L1
+* IKY150N65EH7		DuoPack		650		150		PG-TO247-4	IKY150N65EH7_L1
+*******************************************************************************
+* DISCLAIMER
+*
+* INFINEON'S MODEL TERMS OF USE
+*
+* BY DOWNLOADING AND/OR USING THIS INFINEON MODEL ("MODEL"), THE USER
+* (INCLUDING YOU) AGREES TO BE BOUND BY THE TERMS OF USE HERE STATED. IF USER
+* DOES NOT AGREE TO ALL TERMS OF USE HERE STATED, USER SHALL NOT DOWNLOAD,
+* USE OR COPY THE MODEL BUT IMMEDIATELY DELETE IT (TO THE EXTENT THAT IT
+* WAS DOWNLOADED ALREADY).
+*
+* 1. SCOPE OF USE
+* 1.1 Any use of this Model provided by Infineon Technologies AG is subject
+*     to these Terms of Use.
+* 1.2 This Model, provided by Infineon, does not fully represent all of the
+*     specifications and operating characteristics of the product to which
+*     this Model relates.
+* 1.3 This Model only describes the characteristics of a typical product.
+*     In all cases, the current data sheet information for a given product
+*     is the final design guideline and the only actual performance
+*     specification. Although this Model can be a useful tool to evaluate
+*     the product performance, it cannot simulate the exact product performance
+*     under all conditions and it is also not intended to replace
+*     bread-boarding for final verification.
+*
+* 2. IMPORTANT NOTICE
+* 2.1 Infineon Technologies AG ("Infineon") is not and cannot be aware of the
+*     specific application of the Infineon's Model by User. However, Model may
+*     from time to time be used by User in potentially harmful and/or life-
+*     endangering applications such as traffic, logistic, medical, nuclear
+*     or military applications or in other applications where failure of the
+*     Model may predictably cause damage to persons' life or health or to
+*     property (hereinafter "Critical Applications").
+* 2.2 User acknowledges that Infineon has not specifically designed or
+*     qualified the Model for Critical Applications that the Model may contain
+*     errors and bugs and that User is required to qualify the Model for
+*     Critical Applications pursuant to the applicable local quality, safety
+*     and legal requirements before permitting or giving access to any such use.
+*
+* 3. CONFIDENTIAL INFORMATION
+*     User shall treat ideas, concepts and information incorporated in the
+*     Model, the documentation and the content of this Terms of Use (together
+*     hereinafter "Confidential Information") confidential, not disclose it to
+*     any third party unless otherwise agreed in writing between User and
+*     Infineon, not use it for any other purposes than using the Model for
+*     simulation and testing purposes only.
+*
+* 4. WARRANTY
+* 4.1 User acknowledges that the Model is provided by Infineon under this Terms
+*     of Use is provided free of charge and "AS IS" without any warranty or
+*     liability of any kind and Infineon hereby expressly disclaims any
+*     warranties or representations, whether express, implied, statutory or
+*     otherwise, including but not limited to warranties of workmanship,
+*     merchantability, fitness for a particular purpose, defects in the
+*     Model, or non-infringement of third parties intellectual property rights.
+* 4.2 Infineon reserves the right to make corrections, deletions, modifications,
+*     enhancements, improvements and other changes to the Model at any time
+*     or to move or discontinue any Model without notice.
+*
+* 5. LIABILITY
+* 5.1 Nothing in this Terms of Use shall limit or exclude Infineon's liability
+*     under mandatory liability laws, for injuries to life, body or health,
+*     for fraudulent concealment of defects in the software, or in cases
+*     of Infineon's intentional misconduct or gross negligence.
+* 5.2 Without prejudice to Sections 5.1, in cases of Infineon's slight
+*     negligent breach of obligations that restrict essential rights or duties
+*     arising from the nature of this Terms of Use in a way that there is a
+*     risk of non-achievement of the purpose of this Terms of Use or of an
+*     obligation whose observance User regularly may trust in and whereas
+*     compliance with only makes proper execution of this Terms of Use
+*     possible, Infineon's liability shall be limited to the typically,
+*     foreseeable damage.
+* 5.3 Without prejudice to Sections 8.1 and 8.2, Infineon's liability under
+*     this Agreement shall be excluded in all other cases.
+*
+* 6. EXPORT REGULATIONS
+*     The User shall comply with all applicable national and international
+*     laws and regulations, in particular the applicable export control
+*     regulations and sanction programs. The User also agrees not to
+*     export, re-export or transfer any software or technology developed
+*     with or using information, software or technology offered by Infineon,
+*     in violation of any applicable laws or regulations of the competent
+*     authorities. Further, the User shall neither use any products,
+*     information, software and technology offered by Infineon in or in
+*     connection with nuclear technology or weapons of mass destruction
+*     (nuclear, biological or chemical) and carriers thereof nor supply
+*     military consignees.
+*
+* 7. TERMINATION OF USE PERMIT
+*     If the User violates these Terms of Use, such User's permit to use
+*     this Model terminates automatically. In addition, Infineon may
+*     terminate the User's permit to use this Model at its discretion and
+*     at any time regardless of any violation of these Terms of Use. In
+*     any of the foregoing events, the User is obliged to immediately destroy
+*     any content that has been downloaded or printed from Infineon's website.
+*
+* 8. MISCELLANEOUS
+* 8.1 These Terms of Use are subject to the laws of the Federal Republic
+*     of Germany with the exception of the United Nations on Purchase
+*     Contracts on the International Sale of Goods dated April 11, 1980 (CISG).
+*     The exclusive place of jurisdiction is Munich, Germany.
+* 8.2 Should any provision in these Terms of Use be or become invalid, the
+*     validity of all other provisions or agreements shall remain unaffected
+*******************************************************************************
+.SUBCKT IKWH40N65EH7_L1 C G E PARAMS: TJ= {TEMP} N59B3=0.088 N5BL0=0.06023 N5FXV=0 N5H0W=5E-9 N5I8Q=1.5E-9
++N5JYF=0.25
+R01F2 E1 E2  {1E-06}
+L0590 E2 E  {N5H0W}
+R06FP E1 0  {1E+08}
+R07B3 E2 0  {1E+08}
+X081S C G E1 Z00OF PARAMS: TJ= {TJ} N59B3= { N59B3} N5FXV= {N5FXV} N5I8Q= {N5I8Q} N5JYF= {N5JYF}
++N5KG0=1.5 N5LUB=0.4 N5LWW=1.05 N5MQG=0.5
++N5NHU=4E-3 N5NIE=-1.8E-5 N5P0C=0.4 N5Q9J=1E-12 N5QVA=1E-10 N5R1G=1.74
+X08NI E1 C Z00XD PARAMS: TJ= {TJ} N5BL0= {N5BL0} N5FXV= {N5FXV} N5RPT= {N5I8Q} N5SAA= {N5JYF}
++N5W6H=3.059E+00
++N5WLJ=9.615E-04
++N5XB7=1.100E-06
++N5XVP=2.403E+00
++N5Y38=1.147E-03
++N5Y9G=7.783E-08
++N5YBP=3.939E-10
++N5Z3A=6.842E-08
++N6062=2.110E-10
+.ENDS
+ 
+.SUBCKT IKZA40N65EH7_L1 C G E K PARAMS: TJ= {TEMP} N59B3=0.088 N5BL0=0.06023 N5FXV=0 N5H0W=2.45E-9 N5I8Q=1.35E-9
++N5JYF=0.26
+R0CIQ E1 N61NR  {1E-04}
+L0EA0 N61NR K  {1E-09}
+R01F2 E1 E2  {1E-06}
+L0590 E2 E  {N5H0W}
+R0HXH N61NR 0  {1E+08}
+R06FP E1 0  {1E+08}
+R07B3 E2 0  {1E+08}
+X081S C G E1 Z00OF PARAMS: TJ= {TJ} N59B3= { N59B3} N5FXV= {N5FXV} N5I8Q= {N5I8Q} N5JYF= {N5JYF}
++N635D=2E-9 KVTH=1.02 N5KG0=2.6 N66M9=0.9 N66NJ=1.055 N5LUB=0.37 N5LWW=1.1 N5MQG=0.5
++N69L9=-1 N6EXL=-3E-3 N5NHU=6.3E-3 N5NIE=-1.5E-5 N5Q9J=1E-8 N5QVA=2E-10
+X08NI E1 C Z00XD PARAMS: TJ= {TJ} N5BL0= {N5BL0} N5FXV= {N5FXV} N5RPT= {N5I8Q} N5SAA= {N5JYF}
++N5W6H=3.820E+00
++N5WLJ=4.500E-04
++N5XB7=8.000E-07
++N6F9E=5.998E-05
++N6G9I=4.208E-07
++N5Y9G=1.400E-07
++N5YBP=7.500E-10
+.ENDS
+ 
+.SUBCKT IKWH50N65EH7_L1 C G E PARAMS: TJ= {TEMP} N59B3=0.1099 N5BL0=0.07356 N5FXV=0 N5H0W=4.5E-9 N5I8Q=1.5E-9
++N5JYF=0.325
+R01F2 E1 E2  {1E-06}
+L0590 E2 E  {N5H0W}
+R06FP E1 0  {1E+08}
+R07B3 E2 0  {1E+08}
+X0OEV C G E1 Z00OF PARAMS: TJ= {TJ} N59B3= { N59B3} N5FXV= {N5FXV} N5I8Q= {N5I8Q} N5JYF= {N5JYF}
++N5KG0=1.5 N5LUB=0.5 N5LWW=1.07 N5MQG=0.5
++N5NHU=4E-3 N5NIE=-2E-5 N5P0C=0.2 N5Q9J=1E-8 N5QVA=1E-10 N5R1G=1 N6GDC=2E-2
+X0OGB E1 C Z00XD PARAMS: TJ= {TJ} N5BL0= {N5BL0} N5FXV= {N5FXV} N5RPT= {N5I8Q} N5SAA= {N5JYF}
++N5Y9G=7.600E-08
++N5YBP=3.250E-10
++N5Z3A=1.108E-07
++N6062=1.334E-11
+.ENDS
+ 
+.SUBCKT IKZA50N65EH7_L1 C G E K PARAMS: TJ= {TEMP} N59B3=0.1099 N5BL0=0.07356 N5FXV=0 N5H0W=2.3E-9 N5I8Q=2.3E-9
++N5JYF=0.3
+R0CIQ E1 N61NR  {1E-04}
+L0EA0 N61NR K  {1E-09}
+R01F2 E1 E2  {1E-06}
+L0590 E2 E  {N5H0W}
+R0HXH N61NR 0  {1E+08}
+R06FP E1 0  {1E+08}
+R07B3 E2 0  {1E+08}
+X0OEV C G E1 Z00OF PARAMS: TJ= {TJ} N59B3= { N59B3} N5FXV= {N5FXV} N5I8Q= {N5I8Q} N5JYF= {N5JYF}
++N635D=2E-9 KVTH=1.02 N5KG0=3.4 N66M9=0.9 N66NJ=1.1 N5LUB=0.5 N5LWW=1.15 N5MQG=0.5
++N69L9=-2.6 N6EXL=-5E-3 N5NHU=6.3E-3 N5NIE=-2.5E-5 N5P0C=0.6284 N5Q9J=1E-8 N5QVA=2E-10 N5R1G=1 N6GDC=5.416E-3
+X0OGB E1 C Z00XD PARAMS: TJ= {TJ} N5BL0= {N5BL0} N5FXV= {N5FXV} N5RPT= {N5I8Q} N5SAA= {N5JYF}
++N5WLJ=8.000E-04
++N5XB7=1.500E-06
++N5Y9G=8.000E-08
++N5YBP=6.000E-10
+.ENDS
+ 
+.SUBCKT IKWH75N65EH7_L1 C G E PARAMS: TJ= {TEMP} N59B3=0.1648 N5BL0=0.11363 N5FXV=0 N5H0W=4E-9 N5I8Q=1.5E-9
++N5JYF=0.5
+R01F2 E1 E2  {1E-06}
+L0590 E2 E  {N5H0W}
+R06FP E1 0  {1E+08}
+R07B3 E2 0  {1E+08}
+X11M8 C G E1 Z00OF PARAMS: TJ= {TJ} N59B3= { N59B3} N5FXV= {N5FXV} N5I8Q= {N5I8Q} N5JYF= {N5JYF}
++N5LUB=0.8 N5MQG=1.05
++N5NHU=1.6E-3 N5NIE=-7E-6 N5P0C=0.2 N5Q9J=1E-8 N5QVA=1E-10 N5R1G=1 N6GDC=6E-3
+X16IV E1 C Z00XD PARAMS: TJ= {TJ} N5BL0= {N5BL0} N5FXV= {N5FXV} N5RPT= {N5I8Q} N5SAA= {N5JYF}
++N5Y9G=8.5E-08
+.ENDS
+ 
+.SUBCKT IKZA75N65EH7_L1 C G E K PARAMS: TJ= {TEMP} N59B3=0.1648 N5BL0=0.11363 N5FXV=0 N5H0W=3E-9 N5I8Q=2.3E-9
++N5JYF=0.4
+R0CIQ E1 N61NR  {1E-04}
+L0EA0 N61NR K  {1E-09}
+R01F2 E1 E2  {1E-06}
+L0590 E2 E  {N5H0W}
+R0HXH N61NR 0  {1E+08}
+R06FP E1 0  {1E+08}
+R07B3 E2 0  {1E+08}
+X11M8 C G E1 Z00OF PARAMS: TJ= {TJ} N59B3= { N59B3} N5FXV= {N5FXV} N5I8Q= {N5I8Q} N5JYF= {N5JYF}
++N635D=2E-9 KVTH=1.02 N5KG0=3.4 N66M9=0.98 N66NJ=1.3 N5LUB=0.66
++N69L9=-2.3 N6EXL=-5.0E-3 N5NHU=6.3E-3 N5NIE=-2.25E-5 N5P0C=0.2 N5Q9J=1E-8 N5QVA=1E-10
+X16IV E1 C Z00XD PARAMS: TJ= {TJ} N5BL0= {N5BL0} N5FXV= {N5FXV} N5RPT= {N5I8Q} N5SAA= {N5JYF}
++N5Y9G=7.000E-08
++N5YBP=4.355E-10
+.ENDS
+ 
+.SUBCKT IKWH100N65EH7_L1 C G E PARAMS: TJ= {TEMP} N59B3=0.2197 N5BL0=0.1515 N5FXV=0 N5H0W=3E-9 N5I8Q=1E-9
++N5JYF=0.67
+R01F2 E1 E2  {1E-06}
+L0590 E2 E  {N5H0W}
+R06FP E1 0  {1E+08}
+R07B3 E2 0  {1E+08}
+X1K4Y C G E1 Z00OF PARAMS: TJ= {TJ} N59B3= { N59B3} N5FXV= {N5FXV} N5I8Q= {N5I8Q} N5JYF= {N5JYF}
++N5P0C=0.2 N5Q9J=1E-8 N5QVA=1E-10
+X1KV5 E1 C Z00XD PARAMS: TJ= {TJ} N5BL0= {N5BL0} N5FXV= {N5FXV} N5RPT= {N5I8Q} N5SAA= {N5JYF}
++N5W6H=2.889E+00
++N6LKC=1.421E+01
++N5WLJ=1.100E-03
++N5XB7=2.068E-06
++N5XVP=3.188E+00
++N5Y38=1.000E-05
+.ENDS
+ 
+.SUBCKT IKZA100N65EH7_L1 C G E K PARAMS: TJ= {TEMP} N59B3=0.2197 N5BL0=0.1515 N5FXV=0 N5H0W=3E-9 N5I8Q=1.5E-9
++N5JYF=0.6
+R0CIQ E1 N61NR  {1E-04}
+L0EA0 N61NR K  {1E-09}
+R01F2 E1 E2  {1E-06}
+L0590 E2 E  {N5H0W}
+R0HXH N61NR 0  {1E+08}
+R06FP E1 0  {1E+08}
+R07B3 E2 0  {1E+08}
+X1K4Y C G E1 Z00OF PARAMS: TJ= {TJ} N59B3= { N59B3} N5FXV= {N5FXV} N5I8Q= {N5I8Q} N5JYF= {N5JYF}
++N635D=1.5E-9 KVTH=1 N5KG0=2.6 N66M9=0.94 N66NJ=0.92 N5LUB=0.98 N5LWW=1.32 N5MQG=0.45
++N69L9=-1.6 N6LKW=4E-3 N5NHU=5.8E-3 N5NIE=-2.1E-5 N5P0C=0.2 N5Q9J=1E-8 N5QVA=1E-10 N5R1G=5.5E-1 N6GDC=5.9E-3
+X1KV5 E1 C Z00XD PARAMS: TJ= {TJ} N5BL0= {N5BL0} N5FXV= {N5FXV} N5RPT= {N5I8Q} N5SAA= {N5JYF}
++N5WLJ=7.800E-04
++N5Y9G=9.000E-08
++N5YBP=3.000E-10
+.ENDS
+ 
+.SUBCKT IKQ120N65EH7_L1 C G E PARAMS: TJ= {TEMP} N59B3=0.2638 N5BL0=0.1818 N5FXV=0 N5H0W=2.5E-9 N5I8Q=1.6E-9
++N5JYF=0.75
+R01F2 E1 E2  {1E-06}
+L0590 E2 E  {N5H0W}
+R06FP E1 0  {1E+08}
+R07B3 E2 0  {1E+08}
+X229H C G E1 Z00OF PARAMS: TJ= {TJ} N59B3= { N59B3} N5FXV= {N5FXV} N5I8Q= {N5I8Q} N5JYF= {N5JYF}
++KVTH=1.01 N5KG0=1.2 N5LUB=1.345 N5LWW=1.15 N5MQG=1.07
++N5NHU=2.4E-3 N5NIE=-0.9E-5 N5P0C=0.2 N5Q9J=1E-8 N5QVA=1E-10
+X24YC E1 C Z00XD PARAMS: TJ= {TJ} N5BL0= {N5BL0} N5FXV= {N5FXV} N5RPT= {N5I8Q} N5SAA= {N5JYF}
++N5W6H=2.888E+00
++N6MC4=6.687E-04
++N6LKC=1.362E+01
++N5WLJ=1.074E-03
++N5XB7=1.858E-06
++N6F9E=6.424E-04
++N6G9I=6.505E-08
++N5XVP=3.188E+00
++N5Y38=6.997E-04
++N5Y9G=7.986E-08
++N5YBP=4.774E-10
++N5Z3A=8.426E-08
++N6062=1.254E-10
+.ENDS
+ 
+.SUBCKT IKY120N65EH7_L1 C G E K PARAMS: TJ= {TEMP} N59B3=0.2638 N5BL0=0.1818 N5FXV=0 N5H0W=0.5E-9 N5I8Q=1.6E-9
++N5JYF=0.75
+R0CIQ E1 N61NR  {1E-04}
+L0EA0 N61NR K  {1E-09}
+R01F2 E1 E2  {1E-06}
+L0590 E2 E  {N5H0W}
+R0HXH N61NR 0  {1E+08}
+R06FP E1 0  {1E+08}
+R07B3 E2 0  {1E+08}
+X229H C G E1 Z00OF PARAMS: TJ= {TJ} N59B3= { N59B3} N5FXV= {N5FXV} N5I8Q= {N5I8Q} N5JYF= {N5JYF}
++N635D=1E-9 KVTH=1.03 N5KG0=2 N5LUB=1.345 N5LWW=1.1 N5MQG=0.72
++N69L9=-1.9 N6LKW=4E-3 N5NHU=4E-3 N5NIE=-1.3E-5 N5P0C=0.2 N5Q9J=1E-8 N5QVA=1E-10 N5R1G=5E-2 N6GDC=1E-3
+X2HL0 E1 C Z00XD PARAMS: TJ= {TJ} N5BL0= {N5BL0} N5FXV= {N5FXV} N5RPT= {N5I8Q} N5SAA= {N5JYF}
++N5W6H=4.094E+00
++N5WLJ=2.868E-04
++N5XB7=2.200E-06
++N6F9E=8.303E-05
++N6G9I=8.618E-06
++N5XVP=3.144E+00
++N5Y38=4.664E-03
++N5Y9G=7.825E-08
+.ENDS
+ 
+.SUBCKT IKQ150N65EH7_L1 C G E PARAMS: TJ= {TEMP} N59B3=0.32998 N5BL0=0.2272 N5FXV=0 N5H0W=3.2E-9 N5I8Q=1.5E-9
++N5JYF=0.9
+R01F2 E1 E2  {1E-06}
+L0590 E2 E  {N5H0W}
+R06FP E1 0  {1E+08}
+R07B3 E2 0  {1E+08}
+X2NL6 C G E1 Z00OF PARAMS: TJ= {TJ} N59B3= { N59B3} N5FXV= {N5FXV} N5I8Q= {N5I8Q} N5JYF= {N5JYF}
++KVTH=0.99 N5KG0=1.1 N5LUB=1.345 N5LWW=1.2 N5MQG=0.8
++N5NHU=2E-3 N5NIE=-1E-5 N5P0C=0.2 N5Q9J=2E-8 N5QVA=2E-10
+X2ODV E1 C Z00XD PARAMS: TJ= {TJ} N5BL0= {N5BL0} N5FXV= {N5FXV} N5RPT= {N5I8Q} N5SAA= {N5JYF}
++N5W6H=2.501E+00
++N6LKC=1.493E+01
++N5WLJ=1.423E-03
++N5XB7=2.271E-06
++N5XVP=2.716E+00
++N5Y38=1.119E-03
++N5Y9G=8.539E-08
++N5YBP=5.750E-10
+.ENDS
+ 
+.SUBCKT IKY150N65EH7_L1 C G E K PARAMS: TJ= {TEMP} N59B3=0.32998 N5BL0=0.2272 N5FXV=0 N5H0W=3E-9 N5I8Q=1.5E-9
++N5JYF=0.97
+R0CIQ E1 N61NR  {1E-04}
+L0EA0 N61NR K  {1E-09}
+R01F2 E1 E2  {1E-06}
+L0590 E2 E  {N5H0W}
+R0HXH N61NR 0  {1E+08}
+R06FP E1 0  {1E+08}
+R07B3 E2 0  {1E+08}
+X2NL6 C G E1 Z00OF PARAMS: TJ= {TJ} N59B3= { N59B3} N5FXV= {N5FXV} N5I8Q= {N5I8Q} N5JYF= {N5JYF}
++N635D=2.2E-9 KVTH=0.915 N5KG0=1.175 N66M9=0.9 N66NJ=1.05 N5LUB=1.345 N5LWW=1.25 N5MQG=0.8
++N69L9=-1.3 N5NHU=5.4E-3 N5NIE=-2.1E-5 N5P0C=0.3 N5QVA=1E-10 N5R1G=1.1 N6GDC=2E-3
+X2ODV E1 C Z00XD PARAMS: TJ= {TJ} N5BL0= {N5BL0} N5FXV= {N5FXV} N5RPT= {N5I8Q} N5SAA= {N5JYF}
++N5W6H=3.043E+00
++N6LKC=1.442E+01
++N5WLJ=9.800E-04
++N5XB7=2.250E-06
++N5XVP=4.065E+00
++N5Y38=2.487E-05
++N5Y9G=7.825E-08
++N5YBP=5.000E-10
+.ENDS
+ 
+.SUBCKT Z00OF C G E PARAMS: TJ=25 N6MND=0.2197 N59B3=0.1 N5FXV=0 N6N2L=0 N635D=3E-09 N6N6E=0 N6NT9=0 N6PGK=0
++N6QIH=0
++N5I8Q=1E-09 N5JYF=1 KVTH=1 N5KG0=1 N66M9=1 N66NJ=1 N5LUB=1 N5LWW=1 N5MQG=1
++N6SFF=3.084E+00
++N6SSJ=0.000E+00
++N6TC2=9.875E+00
++N6TXI=1.780E+01
++N6V3T=1.290E+01
++N6V4R=1.987E-06
++N6VQB=7.058E+02
++N69L9=-1.500E+00
++N6W1U=4.841E+00
++N6EXL=-4.134E-03
++N6XII=9.989E-04
++N6YDD=8.701E+00
++N6LKW=4.430E-03
++N6YK0=1.527E-05
++N6YQ8=-9.604E-05
++N6Z7A=-1.334E-07
++N7202=2.436E-07
++N73YQ=-2.785E-07
++N5NHU=2.243E-04
++N5NIE=-2.928E-06
++N74YG=-2.710E-01
++N771T=-1.982E-01
++N773G=-7.411E-01
++N77RZ=-2.312E-03
++N790G=2.481E+00
++N79QN=-9.454E-03
++N7BF0=4.890E-10
++N7BZN=1.800E-01
++N7DOL=1.100E-09
++N7EMZ=1.900E-01
++N7GXO=2.376E-08
++N7HGM=1.000E-12
++N7J6U=4.000E-02
++N5P0C=6.284E-01
++N5Q9J=2.108E-12
++N5QVA=4.511E-10
++N5R1G=5.500E-01
++N6GDC=5.416E-03
+.PARAM N7MEJ=2.9815E+02
+.PARAM N7PSY=1.3806E-23
+.PARAM N7PVS=1.6022E-19
+.PARAM N7ROG=1.0000E+08
+.PARAM KP= {N59B3*N5KG0*N6VQB*PWR((TJ+273.15)/N7MEJ,N69L9)}
+.PARAM N7RS2= {KVTH*(N6W1U+N6EXL*(TJ+273.15-N7MEJ))}
+.PARAM IS= {N59B3*N6XII*EXP((((TJ+273.15)/N7MEJ)-1)*N6YDD)}
+.PARAM N7TA3= {N6SFF+N6SSJ*(TJ+273.15-N7MEJ)}
+.PARAM N7VSH= {N6LKW+N6YK0*(TJ+273.15-N7MEJ)}
+.PARAM N805S= {N6YQ8+N6Z7A*(TJ+273.15-N7MEJ)}
+.PARAM N80YC= {N7202+N73YQ*(TJ+273.15-N7MEJ)}
+.PARAM N81A1= {N5NHU+N5NIE*(TJ+273.15-N7MEJ)}
+.PARAM N81A9= {N74YG+N771T*(TJ+273.15-N7MEJ)}
+.PARAM N8230= {N773G+N77RZ*(TJ+273.15-N7MEJ)}
+.PARAM N83P3= {N790G+N79QN*(TJ+273.15-N7MEJ)}
+.PARAM N86Z3= {N6N6E+N6NT9*(TJ+273.15-N7MEJ)}
+.PARAM N8F41= {N6PGK+N6QIH*(TJ+273.15-N7MEJ)}
+.PARAM N8FND= {IF(N8GC9(N6TXI,N81A1,N81A9,N8230)>N8GC9(N6TC2,N81A1,N81A9,N8230),N6TC2,N6TXI)}
+.PARAM N8KZ6= {IF(N8GC9(N6TXI,N81A1,N81A9,N8230)>N8GC9(N6TC2,N81A1,N81A9,N8230),N6TXI,N6TC2)}
+.PARAM N8LD3= {IF(N8GC9(N6TXI,N83P3,N86Z3,N8F41)>N8GC9(N6TC2,N83P3,N86Z3,N8F41),N6TC2,N6TXI)}
+.PARAM N8MV0= {IF(N8GC9(N6TXI,N83P3,N86Z3,N8F41)>N8GC9(N6TC2,N83P3,N86Z3,N8F41),N6TXI,N6TC2)}
+.PARAM N8NQ3= {N5Q9J+N5QVA*(TJ+273.15-N7MEJ)}
+.PARAM N8NRJ= {N5R1G+N6GDC*(TJ+273.15-N7MEJ)}
+.FUNC N8PUD(N8Q94) {IF(N8Q94>=0,IF(N8Q94>50,(N8Q94-49)*EXP(50),EXP(N8Q94)),IF(ABS(N8Q94)>50,1/((ABS(N8Q94)-49)
++*EXP(50)),1/EXP(ABS(N8Q94))))}
+.FUNC N8QCS(N8Q94) {(1-N8PUD(-2*N8Q94))/(1+N8PUD(-2*N8Q94))}
+.FUNC N8RTX(N8Q94) {0.5*(N8PUD(N8Q94)+N8PUD(-N8Q94))}
+.FUNC N8TCU(V,N8Q94,N8TKD,N8UU7) {N8Q94+N8TKD*V+N8UU7*PWR(V,2)}
+.FUNC N8GC9(V,N8Q94,N8TKD,N8UU7) {N8Q94+N8TKD*N8PUD(N8UU7*V)}
+.MODEL MA NMOS(KP= {KP} VTO= {N7RS2} LAMBDA= {N6V4R} TNOM= {TJ} T_ABS= {TJ})
+M336X 2 N8WHL 1 1 MA
+.MODEL N8XTV D(N= {N7TA3} IS= {IS} TNOM= {TJ} T_ABS= {TJ})
+D36JK 5 4 N8XTV
+.FUNC N8YJ0(V,N7VSH,N805S,N80YC) {MAX(MIN(N8TCU(V,N7VSH,N805S,N80YC),N8TCU(N6V3T,N7VSH,N805S,N80YC)),
++N8TCU(N6W1U+N6EXL*(175+273.15-N7MEJ),N7VSH,N805S,N80YC))}
+E36MA 1 E1 VALUE= {I(V4B6D)*N8YJ0(V(N8WHL,E),N7VSH,N805S,N80YC)*N6MND/N59B3}
+.FUNC N9187(V,N81A1,N81A9,N8230) {MAX(MIN(N8GC9(V,N81A1,N81A9,N8230),N8GC9(N8KZ6,N81A1,N81A9,N8230)),N8GC9
++(N8FND,N81A1,N81A9,N8230))}
+.FUNC N91V2(V,N83P3,N86Z3,N8F41) {MAX(MIN(N8GC9(V,N83P3,N86Z3,N8F41),N8GC9(N8MV0,N83P3,N86Z3,N8F41)),N8GC9
++(N8LD3,N83P3,N86Z3,N8F41))}
+.FUNC N92RE(N958J,N96AU,N83P3,N86Z3,N8F41,N81A1,N81A9,N8230) {(1-(1/(N8PUD(N958J-N91V2(N96AU,N83P3,N86Z3,N8F41)
++)+1)))*N9187(N96AU,N81A1,N81A9,N8230)}
+E389P 2 3 VALUE= {I(V4B6D)*N92RE(V(C,E),V(N8WHL,E),N83P3,N86Z3,N8F41,N81A1,N81A9,N8230)*N6MND/N59B3}
+.FUNC N97L5(V,N8Q94) {N6N2L*N59B3*N8Q94*(1+N8QCS(-100*(V)))/2}
+.FUNC N9BMR(V) {(1+N8QCS(100*(V-4)))/2}
+.FUNC N9BRX(V,N8Q94,N8TKD) {IF(N5FXV==1,MAX(N59B3*N8Q94*PWR(V+1E-5,-N8TKD),0),MAX(N59B3*N8Q94*PWR(V+1E-5,-1)
+++N8TKD*1E-10,0))}
+C398U E1 N8WHL  {N59B3*N66M9*N7GXO}
+G39NG E1 N8WHL VALUE= {N97L5(V(N8WHL,E1),N7HGM)*I(V3G3O)*1E+09}
+R3A0D E1 N8WHL  {N7ROG}
+G3B4E 5 N8WHL VALUE= {N9BRX(MAX(V(5,N8WHL)-0.0,N7J6U),N66NJ*N7BF0,N5LUB*N7BZN)*I(V3TUM)*1E+09}
+G3BFR 5 N8WHL VALUE= {N9BRX(MAX(V(5,N8WHL)-0.0,N7J6U),N5LWW*N7DOL,N5MQG*N7EMZ)*I(V3TUM)*1E+09*N9BMR(V(N8WHL,E1))
++}
+R3BSX 5 N8WHL  {N7ROG}
+G3BT3 5 E1 VALUE= {N9BRX(MAX(V(5,E1)-0.0,1E-2),N5I8Q,N5JYF)*I(V41J8)*1E+09}
+R3EUU 5 E1  {N7ROG}
+E3FOQ N9F35 0 VALUE= {V(E1,N8WHL)}
+V3G3O N9F35 N9FZG  {0E+00}
+C3LVQ N9FZG 0  {1E-09}
+E3T8L N9GGD 0 VALUE= {V(5,N8WHL)}
+V3TUM N9GGD N9K46  {0E+00}
+C3UCL N9K46 0  {1E-09}
+E40XD N9K8G 0 VALUE= {V(5,E1)}
+V41J8 N9K8G N9KRK  {0E+00}
+C441R N9KRK 0  {1E-09}
+G44X9 5 11 VALUE= {MAX(ABS(I(V4E0B))-ABS(I(V4E7Y)),0)}
+G457U 0 10 VALUE= {ABS(I(V4B6D))*N5P0C}
+G4686 8 9 VALUE= {(V(8,0)*1E-06)/N8NQ3}
+C47A0 0 8  {1E-06}
+L480Y E E1  {N635D}
+G4B4I N9MJL N8WHL VALUE= {V(N9MJL,N8WHL)/N8NRJ}
+V4B6D 4 3  {0E+00}
+V4DPB C 5  {00E+0}
+V4E0B 9 0  {0E+00}
+V4E7Y 10 8  {0E+00}
+V4FJY 11 E1  {0E+00}
+V4K6E G N9MJL  {0E+00}
+R0HXH 5 0  {N7ROG}
+R4N25 N8WHL E1  {N7ROG}
+R4NQC 5 N8WHL  {N7ROG}
+R4QNC 5 E1  {N7ROG}
+R4QX6 8 0  {N7ROG}
+R4QY2 E E1  {N7ROG}
+R4RFI E1 0  {N7ROG}
+.ENDS Z00OF
+ 
+.SUBCKT Z00XD N9NJQ C PARAMS: TJ=25 N5BL0=0.1 N5FXV=1 N5RPT=1E-09 N5SAA=1
++N5W6H=3.235E+00
++N6MC4=5.576E-04
++N6LKC=1.240E+01
++N5WLJ=8.279E-04
++N5XB7=1.702E-06
++N6F9E=8.545E-04
++N6G9I=1.000E-08
++N5XVP=4.723E+00
++N5Y38=1.000E-05
++N5Y9G=7.825E-08
++N5YBP=6.355E-10
++N5Z3A=1.402E-07
++N6062=2.350E-12
+.PARAM N7MEJ=2.982E+02
+.PARAM N7ROG=1.0000E+08
+.PARAM N9O1Y= {N5BL0*N6MC4*EXP((((TJ+273.15)/N7MEJ)-1)*N6LKC)}
+.PARAM N9OCK= {(N5WLJ+N5XB7*(TJ+273.15-N7MEJ))/N5BL0}
+.PARAM N9OH5= {(N6F9E+N6G9I*(TJ+273.15-N7MEJ))/N5BL0}
+.PARAM N9R9U= {N5XVP+N5Y38*(TJ+273.15-N7MEJ)}
+.PARAM N9RE4= {N5Y9G+N5YBP*(TJ+273.15-N7MEJ)}
+.PARAM N9RFS= {N5Z3A+N6062*(TJ+273.15-N7MEJ)}
+.FUNC N8PUD(N8Q94) {IF(N8Q94>=0,IF(N8Q94>50,(N8Q94-49)*EXP(50),EXP(N8Q94)),IF(ABS(N8Q94)>50,1/((ABS(N8Q94)-49)
++*EXP(50)),1/EXP(ABS(N8Q94))))}
+.FUNC N8QCS(N8Q94) {(1-N8PUD(-2*N8Q94))/(1+N8PUD(-2*N8Q94))}
+.MODEL N9S2L D(IS= {N9O1Y} N= {N5W6H} TNOM= {TJ} T_ABS= {TJ})
+.MODEL N9STJ D(IBV= {N9O1Y} NBV= {1E12} BV=0.5 IS=1E-12 N=1E12 NBVL=1e12 NR=1e12)
+D4SAE D1 D2 N9S2L
+D4TQF D2 D1 N9STJ
+.FUNC N9W8N(N9Y2M) {(1-((N8QCS(N9Y2M*N9OH5))/N9R9U))*N9OCK}
+E4U1L D2 C VALUE= {I(V55IW)*N9W8N(I(V55IW))}
+G4VA7 N9NJQ N9Y7W VALUE= {(I(V55IW)*N9RE4-V(N9ZMU,0)*1E-06)/N9RFS}
+G4VLH 0 N9ZMU VALUE= {I(V55IW)-I(V56KE)}
+G4W5H N9ZMU 0 VALUE= {(V(N9ZMU,0)*1E-6)/N9RE4}
+C4X2M N9ZMU 0  {1E-06}
+.FUNC NA10H(V,N8Q94,N8TKD) {IF(N5FXV==1,MAX(N5BL0*N8Q94*PWR(V+1E-02,-N8TKD),0),
++MAX(N5BL0*N8Q94/MAX(V+1E-02,1E-02)+N8TKD*1E-10,0))}
+G4X55 C N9NJQ VALUE= {NA10H(MAX(V(C,N9NJQ),0),N5RPT,N5SAA)*I(V53B6)*1E+09}
+R4YOB C N9NJQ  {N7ROG}
+E4ZPW NA2A6 0 VALUE= {V(C,N9NJQ)}
+V53B6 NA2A6 NA54M  {0E+00}
+C54X0 NA54M 0  {1E-09}
+V55IW N9NJQ D1  {0}
+V56KE D2 N9Y7W  {0}
+R57RU D1 D2  {N7ROG}
+R58RP D1 0  {N7ROG}
+R598R N9ZMU 0  {N7ROG}
+.ENDS Z00XD
+ 
+  ***********************************************************************************************************************************  

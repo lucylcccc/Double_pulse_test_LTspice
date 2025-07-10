@@ -1,0 +1,2040 @@
+******************************************************************************************************************************************************************************
+*
+*  888888              888888               888888  .o888888888888o.    8888         88888888888  o888888888888888   88888888888888o   88888888888  88888888888  8888888888o
+*   88888             88888888             88888   .8888888  8888888.   8888         88888888888  o8888888888888888  888888  8888888o  88888888888  88888888888  88888888888o
+*    88888           8888  8888           88888   .8888888.  .8888888.  8888         8888         888888888          888888  88888888  8888         8888         8888   88888
+*     88888         8888    8888         88888    88888888    88888888  8888         8888         888888888          888888  88888888  8888         8888         8888   88888
+*      88888       8888      8888       88888     88888888    88888888  8888         8888888      o888888888888888o  888888  8888888o  8888888      8888888      8888   88888
+*       88888     8888        8888     88888      88888888    88888888  8888         8888888      o888888888888888o  88888888888888o   8888888      8888888      8888   88888
+*        88888   8888          8888   88888       88888888    88888888  8888         8888                  88888888  8888              8888         8888         8888   88888
+*         88888 8888            8888 88888        .8888888.  .8888888.  8888         8888                  88888888  8888              8888         8888         8888   88888
+*          88888888             88888888           .8888888  8888888.   88888888888  8888         8888888888888888o  8888              88888888888  88888888888  88888888888o
+*           888888               888888             .o888888888888o.    88888888888  8888         888888888888888o   8888              88888888888  88888888888  8888888888o
+*
+******************************************************************************************************************************************************************************
+
+*******************************************************************************
+**	Wolfspeed, Inc
+**	DISCLAIMER
+*******************************************************************************
+**	This model is provided as is, where is, and with no warranty of any kind
+**	either expressed or implied, including but not limited to any implied
+**	warranties of merchantability and fitness for a particular purpose.
+*******************************************************************************
+**	To find other WOLFSPEED SiC models, please visit:
+**	https://www.wolfspeed.com/power/tools-and-support/all-models
+*******************************************************************************
+**	This library model file is intended for use in LTspice ONLY
+**	Use in any other software will result in syntax or compilation errors!
+*******************************************************************************
+
+*********************************************************************
+****	
+****	Wolfspeed SiC Module Half-bridge SPICE Library
+****		Version 1.5	Date: 2023-12-05
+****	
+****		Models avilable in this library:
+****		CAB320M17XM3,CAB400M12XM3,CAB425M12XM3,CAB450M12XM3,CAB500M17HM3,CAB530M12BM3,CAB650M17HM3,CAB760M12HM3,CAS175M12BM3,CAS310M17BM3,CAS350M12BM3,CAS380M17HM3,CAS480M12HM3,CAS530M12BM3,EAB450M12XM3,WAB300M12BM3,WAB400M12BM3,WAS175M12BM3,WAS310M17BM3,WAS350M12BM3,WAS530M12BM3,CAB011M12FM3,CAB016M12FM3,CAB008M12GM3,CAB008A12GM3,CAB006M12GM3,CAB006A12GM3,CAB011A12GM3,CAB003M09DM3
+****	
+*********************************************************************
+****	Node Definitions:
+****		Electrical
+****		V+  = High side Drain
+****		Mid = AC terminal
+****		V-  = Low side source
+****		G1  = HS Gate
+****		K1  = HS Kelvin
+****		G2  = LS Gate
+****		K2  = LS Kelvin
+****		Thermal
+****		Tc1  = High Side Case Thermal Connection [apply coolant temperature as a voltage]
+****		Tc2  = Low  Side Case Thermal Connection [apply coolant temperature as a voltage]
+****		TjQ1 = High Side MOSFET Junction Temperature
+****		TjQ2 = Low  Side MOSFET Junction Temperature
+****		TjD1 = High Side Schottky Junction Temperature
+****		TjD2 = Low  Side Schottky Junction Temperature
+****		Electrical (EMI)
+****		Baseplate = Node for studying current induced 
+****					through heatsink into grounding system
+*********************************************************************
+****	Model Complexity Control:
+****		BPC      = enable basepalte capacitance
+****					0: no BPC (zero current on Baseplate node)
+****					1: Include BPC (slower)
+****		Thermals = enable closed loop thermals
+****					0: Fixed Tj defined by TEMP
+****					1: Include BPC (slower)
+****		level    = change the complexity / accuracy of the model
+****					1: Body diode at -4V only
+****					2: Full third quadrant conduction
+****					3: Full third quadrant conduction with reverse recovery
+****	Parameter Definitions:
+****		Vths = Threshold voltage shift (V)
+****		Rdss = Drain Resistance shift (Ω)
+****		Rp   = Inductor parallel res (Ω)
+****				low pass filter on ringing
+****				100 (default) good balance of bandwidth and sim-time
+****				1m   removes impact of packaging but greatly improves sim time
+*********************************************************************
+
+
+
+.SUBCKT Module_HalfBridge V+ Mid V- G1 K1 G2 K2 Tc1 Tc2 TjQ1 TjQ2 TjD1 TjD2 Baseplate
+
+*** SiC MOSFETS ***
+XQ1 Vd GHI Vp TjQ1 IQ1 {LmflagQ1} PARAMS: die={die} Rp={Rp} AFm={AFm} Vths={Vths} Rdss={Rdss} Lcsi={LcsiQ1} Cgd_Module={CgdOffset} tm1={tm1} tm2={tm2} tau1={tau1} tau2={tau2} agd={agd} ads={ads} ags={ags} dummy=1m
+XQ2 Vp GLI Vs TjQ2 IQ2 {LmflagQ2} PARAMS: die={die} Rp={Rp} AFm={AFm} Vths={Vths} Rdss={Rdss} Lcsi={LcsiQ2} Cgd_Module={CgdOffset} tm1={tm1} tm2={tm2} tau1={tau1} tau2={tau2} agd={agd} ads={ads} ags={ags} dummy=1m
+
+*** SiC Schottky ***
+XD1 Vp Vd TjD1 ID1 {Schottky} PARAMS: AF={AFs} dummy=1m
+XD2 Vs Vp TjD2 ID2 {Schottky} PARAMS: AF={AFs} dummy=1m
+
+*** Thermal Networks ***
+XQ1_Thermal TjQ1 Tc1 Vd Vp IQ1 {Thermal} PARAMS: Ct1={Ct1} Ct2={Ct2} Ct3={Ct3} Rt1={Rt1} Rt2={Rt2} Rt3={Rt3} Tj={Tj} dummy=1m
+XQ2_Thermal TjQ2 Tc2 Vp Vs IQ2 {Thermal} PARAMS: Ct1={Ct1} Ct2={Ct2} Ct3={Ct3} Rt1={Rt1} Rt2={Rt2} Rt3={Rt3} Tj={Tj} dummy=1m
+XD1_Thermal TjD1 Tc1 Vd Vp ID1 {SchottkyThermal} PARAMS: Ct1={SchCt1} Ct2={SchCt2} Ct3={SchCt3} Rt1={SchRt1} Rt2={SchRt2} Rt3={SchRt3} Tj={Tj} dummy=1m
+XD2_Thermal TjD2 Tc2 Vp Vs ID2 {SchottkyThermal} PARAMS: Ct1={SchCt1} Ct2={SchCt2} Ct3={SchCt3} Rt1={SchRt1} Rt2={SchRt2} Rt3={SchRt3} Tj={Tj} dummy=1m
+
+*** Baseplate Capacitance ***
+XU3 Vd Vp Vs Baseplate {BPC} PARAMS: Cug={Cug} Cag={Cag} Clg={Clg} dummy=1m
+
+*** Parasitic Parameters ***
+
+Ld V+ Vd {Ld} Rser={Rdesr} Rpar={Rp}
+Lp Mid Vp {Lp} Rser={Rpesr} Rpar={Rp}
+Ls V- Vs {Ls} Rser={Rsesr} Rpar={Rp}
+Lg1 G1 GHI {LgQ1/2} Rser={Rgi/2}
+Lk1 K1 Vp {LgQ1/2} Rser={Rgi/2}
+Lg2 GLI G2 {LgQ2/2} Rser={Rgi/2}
+Lk2 K2 Vs {LgQ2/2} Rser={Rgi/2}
+
+.ENDS Module_HalfBridge
+
+*** SUBCKT 1/2: BPC ***
+.SUBCKT 1 VD VP VS BP
+R BP 0 1
+.ENDS
+
+.SUBCKT 2 VD VP VS BP
+C1 VD BP {Cug}
+C2 VP BP {Cag}
+C3 VS BP {Clg}
+.ENDS
+ 
+*** SUBCKT 3/4: THERMALS ***
+.SUBCKT 3 Tj Tc Vp Vn Vi  PARAMS: Ct1=1 Ct2=1 Ct3=1 Rt1=1 Rt2=1 Rt3=1
+Vt Tj1 0 {Tj}
+Rt Tj1 Tj 1m
+RTground Tc 0 10k
+.ENDS 3
+
+.SUBCKT 4 Tj Tc Vp Vn Vi PARAMS: Ct1=1 Ct2=1 Ct3=1 Rt1=1 Rt2=1 Rt3=1
+Gpwr 0 Tj Value {abs(V(Vp,Vn)*(V(Vi)))}
+Ct1 Tj 0 {Ct1}
+Ct2 1 0 {Ct2}
+Ct3 2 0 {Ct3}
+Rt1 Tj 1 {Rt1}
+Rt2 1 2 {Rt2}
+Rt3 2 Tc {Rt3}
+RTground Tc 0 10k
+.ic V(Tj) = {Tj} V(1) = {Tj} V(2) = {Tj}
+.ENDS 4
+
+*** SUBCKT 5: If Schottky doesn't exist ***
+.SUBCKT 5 A K Tj Id
+V Id 0 1
+.ENDS
+
+** SUBCKT 6/7: Common-source inductance or no? **
+.SUBCKT 6 D G S Tj IMos
+X1 D G S Tj IMos {die} PARAMS: AF={AFm} Vths={Vths} Rdss={Rdss} Cgd_Module={Cgd_Module} tm1={tm1} tm2={tm2} tau1={tau1} tau2={tau2} agd={agd} ads={ads} ags={ags} dummy=1m
+.ENDS 6
+.SUBCKT 7 D G S Tj IMos
+Lcsi S s1 {Lcsi} Rser=50u Rpar={Rp}
+X1 D G s1 Tj IMos {die} PARAMS: AF={AFm} Vths={Vths} Rdss={Rdss} Cgd_Module={Cgd_Module} tm1={tm1} tm2={tm2} tau1={tau1} tau2={tau2} agd={agd} ads={ads} ags={ags} dummy=1m
+.ENDS 7
+ 
+.SUBCKT CAB320M17XM3 V+ Mid V- G1 K1 G2 K2 Tc1 Tc2 TjQ1 TjQ2 TjD1 TjD2 Baseplate
+ 
+*** Default Parameters *** 
+ 
+.param BPC=0 Thermals=1 level=3 Vths=0 Rdss=0 Rp=100 Tj={TEMP} SchSub=101 Schottky=0 AFm=5 AFs=1 AFnomM=5 AFnomS=1 die=10 Ld=5.90n Lp=4.90n Ls=860.00p Rdesr=720.00u Rpesr=100.00u Rsesr=630.00u PackageRgi=0.00 DieRgi=5.20 LgQ1=12.50n LgQ2=12.50n Cug=175.00p Cag=255.70p LcsiQ1=300.00p LcsiQ2=0.00 CgdOffset=3.15p agd=982.39m ags=778.14m ads=999.94m tau1=1.00 tau2=45.08 tm1=50.00 tm2=14.70 Rgis=1.76 Clg=4.80p Rt1={AFnomM*1.62m/AFm} Rt2={AFnomM*14.33m/AFm} Rt3={AFnomM*80.79m/AFm} Ct1={AFm*1.77m/AFnomM} Ct2={AFm*50.84m/AFnomM} Ct3={AFm*354.53m/AFnomM} SchRt1={AFnomS*1.62m/AFs} SchRt2={AFnomS*14.33m/AFs} SchRt3={AFnomS*80.79m/AFs} SchCt1={AFs*1.77m/AFnomS} SchCt2={AFs*50.84m/AFnomS} SchCt3={AFs*354.53m/AFnomS}
+ 
+*** Behavior Optimization *** 
+ 
+.param lvl = if(Schottky,min(level,2),level)
+.param SchT = {if(level-1,1,0)*Thermals*Schottky}
+.param LmflagQ1 = {if(LcsiQ1+0.5,7,6)}
+.param LmflagQ2 = {if(LcsiQ2+0.5,7,6)}
+.param SchottkyD = {-5*(Schottky-1) + Schottky*SchSub}
+.param RgiPerDie = {PackageRgi+DieRgi}
+.param Rgi = {Rgis*RgiPerDie/AFm}
+ 
+*** Module Subcircuit Call *** 
+ 
+X1 V+ Mid V- G1 K1 G2 K2 Tc1 Tc2 TjQ1 TjQ2 TjD1 TjD2 Baseplate Module_HalfBridge PARAMS: BPC = {BPC+1} Thermal = {Thermals+3} SchottkyThermal={SchT+3} Schottky={SchottkyD} Rdss={Rdss} Vths={Vths} AFm={AFm} Afs={AFs} Rp={Rp} Tj={Tj} CgdOffset={CgdOffset} die={die+lvl} Ld={Ld} Lp={Lp} Ls={Ls} LcsiQ1={LcsiQ1} LcsiQ2={LcsiQ2} LmflagQ1={LmflagQ1} LmflagQ2={LmflagQ2} Rdesr={Rdesr} Rpesr={Rpesr} Rsesr={Rsesr} Rgi={Rgi} LgQ1={LgQ1} LgQ2={LgQ2} Cug={Cug} Cag={Cag} Clg={Clg} Rt1={Rt1} Rt2={Rt2} Rt3={Rt3} Ct1={Ct1} Ct2={Ct2} Ct3={Ct3} SchRt1={SchRt1} SchRt2={SchRt2} SchRt3={SchRt3} SchCt1={SchCt1} SchCt2={SchCt2} SchCt3={SchCt3} agd={agd} ads={ads} ags={ags} tm1={tm1} tm2={tm2} tau1={tau1} tau2={tau2} dummy=1m
+
+.ENDS CAB320M17XM3
+
+ 
+.SUBCKT CAB400M12XM3 V+ Mid V- G1 K1 G2 K2 Tc1 Tc2 TjQ1 TjQ2 TjD1 TjD2 Baseplate
+ 
+*** Default Parameters *** 
+ 
+.param BPC=0 Thermals=1 level=3 Vths=0 Rdss=0 Rp=100 Tj={TEMP} SchSub=101 Schottky=0 AFm=4 AFs=1 AFnomM=4 AFnomS=1 die=20 Ld=5.90n Lp=4.90n Ls=860.00p Rdesr=720.00u Rpesr=250.00u Rsesr=630.00u PackageRgi=3.00 DieRgi=2.60 LgQ1=12.50n LgQ2=12.50n Cug=175.00p Cag=255.70p LcsiQ1=300.00p LcsiQ2=0.00 CgdOffset=6.26p agd=1.10 ags=792.84m ads=999.69m tau1=1.00 tau2=34.68 tm1=50.00 tm2=21.76 Rgis=1.25 Clg=4.80p Rt1={AFnomM*2.44m/AFm} Rt2={AFnomM*20.05m/AFm} Rt3={AFnomM*98.06m/AFm} Ct1={AFm*1.50m/AFnomM} Ct2={AFm*28.45m/AFnomM} Ct3={AFm*203.13m/AFnomM} SchRt1={AFnomS*2.44m/AFs} SchRt2={AFnomS*20.05m/AFs} SchRt3={AFnomS*98.06m/AFs} SchCt1={AFs*1.50m/AFnomS} SchCt2={AFs*28.45m/AFnomS} SchCt3={AFs*203.13m/AFnomS}
+ 
+*** Behavior Optimization *** 
+ 
+.param lvl = if(Schottky,min(level,2),level)
+.param SchT = {if(level-1,1,0)*Thermals*Schottky}
+.param LmflagQ1 = {if(LcsiQ1+0.5,7,6)}
+.param LmflagQ2 = {if(LcsiQ2+0.5,7,6)}
+.param SchottkyD = {-5*(Schottky-1) + Schottky*SchSub}
+.param RgiPerDie = {PackageRgi+DieRgi}
+.param Rgi = {Rgis*RgiPerDie/AFm}
+ 
+*** Module Subcircuit Call *** 
+ 
+X1 V+ Mid V- G1 K1 G2 K2 Tc1 Tc2 TjQ1 TjQ2 TjD1 TjD2 Baseplate Module_HalfBridge PARAMS: BPC = {BPC+1} Thermal = {Thermals+3} SchottkyThermal={SchT+3} Schottky={SchottkyD} Rdss={Rdss} Vths={Vths} AFm={AFm} Afs={AFs} Rp={Rp} Tj={Tj} CgdOffset={CgdOffset} die={die+lvl} Ld={Ld} Lp={Lp} Ls={Ls} LcsiQ1={LcsiQ1} LcsiQ2={LcsiQ2} LmflagQ1={LmflagQ1} LmflagQ2={LmflagQ2} Rdesr={Rdesr} Rpesr={Rpesr} Rsesr={Rsesr} Rgi={Rgi} LgQ1={LgQ1} LgQ2={LgQ2} Cug={Cug} Cag={Cag} Clg={Clg} Rt1={Rt1} Rt2={Rt2} Rt3={Rt3} Ct1={Ct1} Ct2={Ct2} Ct3={Ct3} SchRt1={SchRt1} SchRt2={SchRt2} SchRt3={SchRt3} SchCt1={SchCt1} SchCt2={SchCt2} SchCt3={SchCt3} agd={agd} ads={ads} ags={ags} tm1={tm1} tm2={tm2} tau1={tau1} tau2={tau2} dummy=1m
+
+.ENDS CAB400M12XM3
+
+ 
+.SUBCKT CAB425M12XM3 V+ Mid V- G1 K1 G2 K2 Tc1 Tc2 TjQ1 TjQ2 TjD1 TjD2 Baseplate
+ 
+*** Default Parameters *** 
+ 
+.param BPC=0 Thermals=1 level=3 Vths=0 Rdss=0 Rp=100 Tj={TEMP} SchSub=101 Schottky=0 AFm=5 AFs=1 AFnomM=5 AFnomS=1 die=20 Ld=5.90n Lp=4.90n Ls=860.00p Rdesr=720.00u Rpesr=250.00u Rsesr=630.00u PackageRgi=3.40 DieRgi=2.60 LgQ1=12.50n LgQ2=12.50n Cug=175.00p Cag=255.70p LcsiQ1=300.00p LcsiQ2=0.00 CgdOffset=6.78p agd=1.19 ags=662.82m ads=999.97m tau1=1.00 tau2=38.36 tm1=50.00 tm2=11.66 Rgis=1.17 Clg=4.80p Rt1={AFnomM*2.03m/AFm} Rt2={AFnomM*17.98m/AFm} Rt3={AFnomM*88.27m/AFm} Ct1={AFm*1.76m/AFnomM} Ct2={AFm*41.30m/AFnomM} Ct3={AFm*304.30m/AFnomM} SchRt1={AFnomS*2.03m/AFs} SchRt2={AFnomS*17.98m/AFs} SchRt3={AFnomS*88.27m/AFs} SchCt1={AFs*1.76m/AFnomS} SchCt2={AFs*41.30m/AFnomS} SchCt3={AFs*304.30m/AFnomS}
+ 
+*** Behavior Optimization *** 
+ 
+.param lvl = if(Schottky,min(level,2),level)
+.param SchT = {if(level-1,1,0)*Thermals*Schottky}
+.param LmflagQ1 = {if(LcsiQ1+0.5,7,6)}
+.param LmflagQ2 = {if(LcsiQ2+0.5,7,6)}
+.param SchottkyD = {-5*(Schottky-1) + Schottky*SchSub}
+.param RgiPerDie = {PackageRgi+DieRgi}
+.param Rgi = {Rgis*RgiPerDie/AFm}
+ 
+*** Module Subcircuit Call *** 
+ 
+X1 V+ Mid V- G1 K1 G2 K2 Tc1 Tc2 TjQ1 TjQ2 TjD1 TjD2 Baseplate Module_HalfBridge PARAMS: BPC = {BPC+1} Thermal = {Thermals+3} SchottkyThermal={SchT+3} Schottky={SchottkyD} Rdss={Rdss} Vths={Vths} AFm={AFm} Afs={AFs} Rp={Rp} Tj={Tj} CgdOffset={CgdOffset} die={die+lvl} Ld={Ld} Lp={Lp} Ls={Ls} LcsiQ1={LcsiQ1} LcsiQ2={LcsiQ2} LmflagQ1={LmflagQ1} LmflagQ2={LmflagQ2} Rdesr={Rdesr} Rpesr={Rpesr} Rsesr={Rsesr} Rgi={Rgi} LgQ1={LgQ1} LgQ2={LgQ2} Cug={Cug} Cag={Cag} Clg={Clg} Rt1={Rt1} Rt2={Rt2} Rt3={Rt3} Ct1={Ct1} Ct2={Ct2} Ct3={Ct3} SchRt1={SchRt1} SchRt2={SchRt2} SchRt3={SchRt3} SchCt1={SchCt1} SchCt2={SchCt2} SchCt3={SchCt3} agd={agd} ads={ads} ags={ags} tm1={tm1} tm2={tm2} tau1={tau1} tau2={tau2} dummy=1m
+
+.ENDS CAB425M12XM3
+
+ 
+.SUBCKT CAB450M12XM3 V+ Mid V- G1 K1 G2 K2 Tc1 Tc2 TjQ1 TjQ2 TjD1 TjD2 Baseplate
+ 
+*** Default Parameters *** 
+ 
+.param BPC=0 Thermals=1 level=3 Vths=0 Rdss=0 Rp=100 Tj={TEMP} SchSub=101 Schottky=0 AFm=5 AFs=1 AFnomM=5 AFnomS=1 die=30 Ld=5.90n Lp=4.90n Ls=860.00p Rdesr=720.00u Rpesr=250.00u Rsesr=630.00u PackageRgi=5.80 DieRgi=6.70 LgQ1=12.50n LgQ2=12.50n Cug=175.00p Cag=255.70p LcsiQ1=300.00p LcsiQ2=0.00 CgdOffset=-4.53p agd=1.07 ags=583.97m ads=997.66m tau1=1.00 tau2=47.08 tm1=50.00 tm2=18.19 Rgis=1.46 Clg=4.80p Rt1={AFnomM*1.56m/AFm} Rt2={AFnomM*14.05m/AFm} Rt3={AFnomM*77.28m/AFm} Ct1={AFm*1.73m/AFnomM} Ct2={AFm*55.15m/AFnomM} Ct3={AFm*381.32m/AFnomM} SchRt1={AFnomS*1.56m/AFs} SchRt2={AFnomS*14.05m/AFs} SchRt3={AFnomS*77.28m/AFs} SchCt1={AFs*1.73m/AFnomS} SchCt2={AFs*55.15m/AFnomS} SchCt3={AFs*381.32m/AFnomS}
+ 
+*** Behavior Optimization *** 
+ 
+.param lvl = if(Schottky,min(level,2),level)
+.param SchT = {if(level-1,1,0)*Thermals*Schottky}
+.param LmflagQ1 = {if(LcsiQ1+0.5,7,6)}
+.param LmflagQ2 = {if(LcsiQ2+0.5,7,6)}
+.param SchottkyD = {-5*(Schottky-1) + Schottky*SchSub}
+.param RgiPerDie = {PackageRgi+DieRgi}
+.param Rgi = {Rgis*RgiPerDie/AFm}
+ 
+*** Module Subcircuit Call *** 
+ 
+X1 V+ Mid V- G1 K1 G2 K2 Tc1 Tc2 TjQ1 TjQ2 TjD1 TjD2 Baseplate Module_HalfBridge PARAMS: BPC = {BPC+1} Thermal = {Thermals+3} SchottkyThermal={SchT+3} Schottky={SchottkyD} Rdss={Rdss} Vths={Vths} AFm={AFm} Afs={AFs} Rp={Rp} Tj={Tj} CgdOffset={CgdOffset} die={die+lvl} Ld={Ld} Lp={Lp} Ls={Ls} LcsiQ1={LcsiQ1} LcsiQ2={LcsiQ2} LmflagQ1={LmflagQ1} LmflagQ2={LmflagQ2} Rdesr={Rdesr} Rpesr={Rpesr} Rsesr={Rsesr} Rgi={Rgi} LgQ1={LgQ1} LgQ2={LgQ2} Cug={Cug} Cag={Cag} Clg={Clg} Rt1={Rt1} Rt2={Rt2} Rt3={Rt3} Ct1={Ct1} Ct2={Ct2} Ct3={Ct3} SchRt1={SchRt1} SchRt2={SchRt2} SchRt3={SchRt3} SchCt1={SchCt1} SchCt2={SchCt2} SchCt3={SchCt3} agd={agd} ads={ads} ags={ags} tm1={tm1} tm2={tm2} tau1={tau1} tau2={tau2} dummy=1m
+
+.ENDS CAB450M12XM3
+
+ 
+.SUBCKT CAB500M17HM3 V+ Mid V- G1 K1 G2 K2 Tc1 Tc2 TjQ1 TjQ2 TjD1 TjD2 Baseplate
+ 
+*** Default Parameters *** 
+ 
+.param BPC=0 Thermals=1 level=3 Vths=0 Rdss=0 Rp=100 Tj={TEMP} SchSub=101 Schottky=0 AFm=8 AFs=1 AFnomM=8 AFnomS=1 die=10 Ld=2.45n Lp=5.00n Ls=2.45n Rdesr=106.50u Rpesr=100.00u Rsesr=126.30u PackageRgi=0.00 DieRgi=5.20 LgQ1=12.50n LgQ2=12.50n Cug=315.50p Cag=400.66p LcsiQ1=0.00 LcsiQ2=0.00 CgdOffset=-6.77p agd=1.47 ags=812.81m ads=997.39m tau1=1.00 tau2=45.08 tm1=50.00 tm2=14.70 Rgis=2.00 Clg=237.10p Rt1={AFnomM*1.29m/AFm} Rt2={AFnomM*12.12m/AFm} Rt3={AFnomM*54.12m/AFm} Ct1={AFm*3.13m/AFnomM} Ct2={AFm*73.74m/AFnomM} Ct3={AFm*632.24m/AFnomM} SchRt1={AFnomS*1.29m/AFs} SchRt2={AFnomS*12.12m/AFs} SchRt3={AFnomS*54.12m/AFs} SchCt1={AFs*3.13m/AFnomS} SchCt2={AFs*73.74m/AFnomS} SchCt3={AFs*632.24m/AFnomS}
+ 
+*** Behavior Optimization *** 
+ 
+.param lvl = if(Schottky,min(level,2),level)
+.param SchT = {if(level-1,1,0)*Thermals*Schottky}
+.param LmflagQ1 = {if(LcsiQ1+0.5,7,6)}
+.param LmflagQ2 = {if(LcsiQ2+0.5,7,6)}
+.param SchottkyD = {-5*(Schottky-1) + Schottky*SchSub}
+.param RgiPerDie = {PackageRgi+DieRgi}
+.param Rgi = {Rgis*RgiPerDie/AFm}
+ 
+*** Module Subcircuit Call *** 
+ 
+X1 V+ Mid V- G1 K1 G2 K2 Tc1 Tc2 TjQ1 TjQ2 TjD1 TjD2 Baseplate Module_HalfBridge PARAMS: BPC = {BPC+1} Thermal = {Thermals+3} SchottkyThermal={SchT+3} Schottky={SchottkyD} Rdss={Rdss} Vths={Vths} AFm={AFm} Afs={AFs} Rp={Rp} Tj={Tj} CgdOffset={CgdOffset} die={die+lvl} Ld={Ld} Lp={Lp} Ls={Ls} LcsiQ1={LcsiQ1} LcsiQ2={LcsiQ2} LmflagQ1={LmflagQ1} LmflagQ2={LmflagQ2} Rdesr={Rdesr} Rpesr={Rpesr} Rsesr={Rsesr} Rgi={Rgi} LgQ1={LgQ1} LgQ2={LgQ2} Cug={Cug} Cag={Cag} Clg={Clg} Rt1={Rt1} Rt2={Rt2} Rt3={Rt3} Ct1={Ct1} Ct2={Ct2} Ct3={Ct3} SchRt1={SchRt1} SchRt2={SchRt2} SchRt3={SchRt3} SchCt1={SchCt1} SchCt2={SchCt2} SchCt3={SchCt3} agd={agd} ads={ads} ags={ags} tm1={tm1} tm2={tm2} tau1={tau1} tau2={tau2} dummy=1m
+
+.ENDS CAB500M17HM3
+
+ 
+.SUBCKT CAB530M12BM3 V+ Mid V- G1 K1 G2 K2 Tc1 Tc2 TjQ1 TjQ2 TjD1 TjD2 Baseplate
+ 
+*** Default Parameters *** 
+ 
+.param BPC=0 Thermals=1 level=3 Vths=0 Rdss=0 Rp=100 Tj={TEMP} SchSub=101 Schottky=0 AFm=6 AFs=1 AFnomM=6 AFnomS=1 die=20 Ld=8.75n Lp=16.10n Ls=2.93n Rdesr=420.00u Rpesr=250.00u Rsesr=280.00u PackageRgi=15.00 DieRgi=2.60 LgQ1=48.00n LgQ2=62.00n Cug=115.10p Cag=176.90p LcsiQ1=0.00 LcsiQ2=0.00 CgdOffset=7.14p agd=1.18 ags=715.59m ads=999.81m tau1=1.00 tau2=51.59 tm1=50.00 tm2=6.35 Rgis=1.02 Clg=90.50p Rt1={AFnomM*1.98m/AFm} Rt2={AFnomM*18.15m/AFm} Rt3={AFnomM*54.46m/AFm} Ct1={AFm*2.73m/AFnomM} Ct2={AFm*50.74m/AFnomM} Ct3={AFm*500.86m/AFnomM} SchRt1={AFnomS*1.98m/AFs} SchRt2={AFnomS*18.15m/AFs} SchRt3={AFnomS*54.46m/AFs} SchCt1={AFs*2.73m/AFnomS} SchCt2={AFs*50.74m/AFnomS} SchCt3={AFs*500.86m/AFnomS}
+ 
+*** Behavior Optimization *** 
+ 
+.param lvl = if(Schottky,min(level,2),level)
+.param SchT = {if(level-1,1,0)*Thermals*Schottky}
+.param LmflagQ1 = {if(LcsiQ1+0.5,7,6)}
+.param LmflagQ2 = {if(LcsiQ2+0.5,7,6)}
+.param SchottkyD = {-5*(Schottky-1) + Schottky*SchSub}
+.param RgiPerDie = {PackageRgi+DieRgi}
+.param Rgi = {Rgis*RgiPerDie/AFm}
+ 
+*** Module Subcircuit Call *** 
+ 
+X1 V+ Mid V- G1 K1 G2 K2 Tc1 Tc2 TjQ1 TjQ2 TjD1 TjD2 Baseplate Module_HalfBridge PARAMS: BPC = {BPC+1} Thermal = {Thermals+3} SchottkyThermal={SchT+3} Schottky={SchottkyD} Rdss={Rdss} Vths={Vths} AFm={AFm} Afs={AFs} Rp={Rp} Tj={Tj} CgdOffset={CgdOffset} die={die+lvl} Ld={Ld} Lp={Lp} Ls={Ls} LcsiQ1={LcsiQ1} LcsiQ2={LcsiQ2} LmflagQ1={LmflagQ1} LmflagQ2={LmflagQ2} Rdesr={Rdesr} Rpesr={Rpesr} Rsesr={Rsesr} Rgi={Rgi} LgQ1={LgQ1} LgQ2={LgQ2} Cug={Cug} Cag={Cag} Clg={Clg} Rt1={Rt1} Rt2={Rt2} Rt3={Rt3} Ct1={Ct1} Ct2={Ct2} Ct3={Ct3} SchRt1={SchRt1} SchRt2={SchRt2} SchRt3={SchRt3} SchCt1={SchCt1} SchCt2={SchCt2} SchCt3={SchCt3} agd={agd} ads={ads} ags={ags} tm1={tm1} tm2={tm2} tau1={tau1} tau2={tau2} dummy=1m
+
+.ENDS CAB530M12BM3
+
+ 
+.SUBCKT CAB650M17HM3 V+ Mid V- G1 K1 G2 K2 Tc1 Tc2 TjQ1 TjQ2 TjD1 TjD2 Baseplate
+ 
+*** Default Parameters *** 
+ 
+.param BPC=0 Thermals=1 level=3 Vths=0 Rdss=0 Rp=100 Tj={TEMP} SchSub=101 Schottky=0 AFm=12 AFs=1 AFnomM=12 AFnomS=1 die=10 Ld=2.45n Lp=5.00n Ls=2.45n Rdesr=106.50u Rpesr=100.00u Rsesr=126.30u PackageRgi=0.00 DieRgi=5.20 LgQ1=12.50n LgQ2=12.50n Cug=315.50p Cag=400.66p LcsiQ1=0.00 LcsiQ2=0.00 CgdOffset=-5.00p agd=1.47 ags=840.22m ads=983.72m tau1=1.00 tau2=45.08 tm1=50.00 tm2=14.70 Rgis=1.99 Clg=237.10p Rt1={AFnomM*942.69u/AFm} Rt2={AFnomM*10.01m/AFm} Rt3={AFnomM*41.68m/AFm} Ct1={AFm*4.46m/AFnomM} Ct2={AFm*130.92m/AFnomM} Ct3={AFm*1.28/AFnomM} SchRt1={AFnomS*942.69u/AFs} SchRt2={AFnomS*10.01m/AFs} SchRt3={AFnomS*41.68m/AFs} SchCt1={AFs*4.46m/AFnomS} SchCt2={AFs*130.92m/AFnomS} SchCt3={AFs*1.28/AFnomS}
+ 
+*** Behavior Optimization *** 
+ 
+.param lvl = if(Schottky,min(level,2),level)
+.param SchT = {if(level-1,1,0)*Thermals*Schottky}
+.param LmflagQ1 = {if(LcsiQ1+0.5,7,6)}
+.param LmflagQ2 = {if(LcsiQ2+0.5,7,6)}
+.param SchottkyD = {-5*(Schottky-1) + Schottky*SchSub}
+.param RgiPerDie = {PackageRgi+DieRgi}
+.param Rgi = {Rgis*RgiPerDie/AFm}
+ 
+*** Module Subcircuit Call *** 
+ 
+X1 V+ Mid V- G1 K1 G2 K2 Tc1 Tc2 TjQ1 TjQ2 TjD1 TjD2 Baseplate Module_HalfBridge PARAMS: BPC = {BPC+1} Thermal = {Thermals+3} SchottkyThermal={SchT+3} Schottky={SchottkyD} Rdss={Rdss} Vths={Vths} AFm={AFm} Afs={AFs} Rp={Rp} Tj={Tj} CgdOffset={CgdOffset} die={die+lvl} Ld={Ld} Lp={Lp} Ls={Ls} LcsiQ1={LcsiQ1} LcsiQ2={LcsiQ2} LmflagQ1={LmflagQ1} LmflagQ2={LmflagQ2} Rdesr={Rdesr} Rpesr={Rpesr} Rsesr={Rsesr} Rgi={Rgi} LgQ1={LgQ1} LgQ2={LgQ2} Cug={Cug} Cag={Cag} Clg={Clg} Rt1={Rt1} Rt2={Rt2} Rt3={Rt3} Ct1={Ct1} Ct2={Ct2} Ct3={Ct3} SchRt1={SchRt1} SchRt2={SchRt2} SchRt3={SchRt3} SchCt1={SchCt1} SchCt2={SchCt2} SchCt3={SchCt3} agd={agd} ads={ads} ags={ags} tm1={tm1} tm2={tm2} tau1={tau1} tau2={tau2} dummy=1m
+
+.ENDS CAB650M17HM3
+
+ 
+.SUBCKT CAB760M12HM3 V+ Mid V- G1 K1 G2 K2 Tc1 Tc2 TjQ1 TjQ2 TjD1 TjD2 Baseplate
+ 
+*** Default Parameters *** 
+ 
+.param BPC=0 Thermals=1 level=3 Vths=0 Rdss=0 Rp=100 Tj={TEMP} SchSub=101 Schottky=0 AFm=12 AFs=1 AFnomM=12 AFnomS=1 die=20 Ld=2.45n Lp=5.00n Ls=2.45n Rdesr=106.50u Rpesr=250.00u Rsesr=126.30u PackageRgi=3.00 DieRgi=2.60 LgQ1=12.50n LgQ2=12.50n Cug=315.50p Cag=400.66p LcsiQ1=0.00 LcsiQ2=0.00 CgdOffset=3.59p agd=1.19 ags=902.58m ads=999.97m tau1=1.00 tau2=49.49 tm1=50.00 tm2=13.22 Rgis=1.46 Clg=237.10p Rt1={AFnomM*13.26m/AFm} Rt2={AFnomM*20.29m/AFm} Rt3={AFnomM*30.69m/AFm} Ct1={AFm*300.68m/AFnomM} Ct2={AFm*686.37m/AFnomM} Ct3={AFm*4.38/AFnomM} SchRt1={AFnomS*13.26m/AFs} SchRt2={AFnomS*20.29m/AFs} SchRt3={AFnomS*30.69m/AFs} SchCt1={AFs*300.68m/AFnomS} SchCt2={AFs*686.37m/AFnomS} SchCt3={AFs*4.38/AFnomS}
+ 
+*** Behavior Optimization *** 
+ 
+.param lvl = if(Schottky,min(level,2),level)
+.param SchT = {if(level-1,1,0)*Thermals*Schottky}
+.param LmflagQ1 = {if(LcsiQ1+0.5,7,6)}
+.param LmflagQ2 = {if(LcsiQ2+0.5,7,6)}
+.param SchottkyD = {-5*(Schottky-1) + Schottky*SchSub}
+.param RgiPerDie = {PackageRgi+DieRgi}
+.param Rgi = {Rgis*RgiPerDie/AFm}
+ 
+*** Module Subcircuit Call *** 
+ 
+X1 V+ Mid V- G1 K1 G2 K2 Tc1 Tc2 TjQ1 TjQ2 TjD1 TjD2 Baseplate Module_HalfBridge PARAMS: BPC = {BPC+1} Thermal = {Thermals+3} SchottkyThermal={SchT+3} Schottky={SchottkyD} Rdss={Rdss} Vths={Vths} AFm={AFm} Afs={AFs} Rp={Rp} Tj={Tj} CgdOffset={CgdOffset} die={die+lvl} Ld={Ld} Lp={Lp} Ls={Ls} LcsiQ1={LcsiQ1} LcsiQ2={LcsiQ2} LmflagQ1={LmflagQ1} LmflagQ2={LmflagQ2} Rdesr={Rdesr} Rpesr={Rpesr} Rsesr={Rsesr} Rgi={Rgi} LgQ1={LgQ1} LgQ2={LgQ2} Cug={Cug} Cag={Cag} Clg={Clg} Rt1={Rt1} Rt2={Rt2} Rt3={Rt3} Ct1={Ct1} Ct2={Ct2} Ct3={Ct3} SchRt1={SchRt1} SchRt2={SchRt2} SchRt3={SchRt3} SchCt1={SchCt1} SchCt2={SchCt2} SchCt3={SchCt3} agd={agd} ads={ads} ags={ags} tm1={tm1} tm2={tm2} tau1={tau1} tau2={tau2} dummy=1m
+
+.ENDS CAB760M12HM3
+
+ 
+.SUBCKT CAS175M12BM3 V+ Mid V- G1 K1 G2 K2 Tc1 Tc2 TjQ1 TjQ2 TjD1 TjD2 Baseplate
+ 
+*** Default Parameters *** 
+ 
+.param BPC=0 Thermals=1 level=3 Vths=0 Rdss=0 Rp=100 Tj={TEMP} SchSub=101 Schottky=1 AFm=2 AFs=2 AFnomM=2 AFnomS=2 die=20 Ld=8.75n Lp=16.10n Ls=2.93n Rdesr=2.30m Rpesr=250.00u Rsesr=2.12m PackageRgi=7.50 DieRgi=2.60 LgQ1=48.00n LgQ2=62.00n Cug=115.10p Cag=176.90p LcsiQ1=0.00 LcsiQ2=0.00 CgdOffset=8.41p agd=1.25 ags=730.06m ads=999.99m tau1=1.00 tau2=35.00 tm1=3.00 tm2=8.00 Rgis=1.22 Clg=90.50p Rt1={AFnomM*5.79m/AFm} Rt2={AFnomM*48.41m/AFm} Rt3={AFnomM*136.51m/AFm} Ct1={AFm*1.03m/AFnomM} Ct2={AFm*15.06m/AFnomM} Ct3={AFm*118.80m/AFnomM} SchRt1={AFnomS*4.58m/AFs} SchRt2={AFnomS*43.28m/AFs} SchRt3={AFnomS*164.20m/AFs} SchCt1={AFs*1.21m/AFnomS} SchCt2={AFs*21.50m/AFnomS} SchCt3={AFs*109.71m/AFnomS}
+ 
+*** Behavior Optimization *** 
+ 
+.param lvl = if(Schottky,min(level,2),level)
+.param SchT = {if(level-1,1,0)*Thermals*Schottky}
+.param LmflagQ1 = {if(LcsiQ1+0.5,7,6)}
+.param LmflagQ2 = {if(LcsiQ2+0.5,7,6)}
+.param SchottkyD = {-5*(Schottky-1) + Schottky*SchSub}
+.param RgiPerDie = {PackageRgi+DieRgi}
+.param Rgi = {Rgis*RgiPerDie/AFm}
+ 
+*** Module Subcircuit Call *** 
+ 
+X1 V+ Mid V- G1 K1 G2 K2 Tc1 Tc2 TjQ1 TjQ2 TjD1 TjD2 Baseplate Module_HalfBridge PARAMS: BPC = {BPC+1} Thermal = {Thermals+3} SchottkyThermal={SchT+3} Schottky={SchottkyD} Rdss={Rdss} Vths={Vths} AFm={AFm} Afs={AFs} Rp={Rp} Tj={Tj} CgdOffset={CgdOffset} die={die+lvl} Ld={Ld} Lp={Lp} Ls={Ls} LcsiQ1={LcsiQ1} LcsiQ2={LcsiQ2} LmflagQ1={LmflagQ1} LmflagQ2={LmflagQ2} Rdesr={Rdesr} Rpesr={Rpesr} Rsesr={Rsesr} Rgi={Rgi} LgQ1={LgQ1} LgQ2={LgQ2} Cug={Cug} Cag={Cag} Clg={Clg} Rt1={Rt1} Rt2={Rt2} Rt3={Rt3} Ct1={Ct1} Ct2={Ct2} Ct3={Ct3} SchRt1={SchRt1} SchRt2={SchRt2} SchRt3={SchRt3} SchCt1={SchCt1} SchCt2={SchCt2} SchCt3={SchCt3} agd={agd} ads={ads} ags={ags} tm1={tm1} tm2={tm2} tau1={tau1} tau2={tau2} dummy=1m
+
+.ENDS CAS175M12BM3
+
+ 
+.SUBCKT CAS310M17BM3 V+ Mid V- G1 K1 G2 K2 Tc1 Tc2 TjQ1 TjQ2 TjD1 TjD2 Baseplate
+ 
+*** Default Parameters *** 
+ 
+.param BPC=0 Thermals=1 level=3 Vths=0 Rdss=0 Rp=100 Tj={TEMP} SchSub=102 Schottky=1 AFm=4 AFs=4 AFnomM=4 AFnomS=4 die=10 Ld=8.75n Lp=16.10n Ls=2.93n Rdesr=1.31m Rpesr=250.00u Rsesr=1.26m PackageRgi=0.00 DieRgi=5.20 LgQ1=48.00n LgQ2=62.00n Cug=115.10p Cag=176.90p LcsiQ1=0.00 LcsiQ2=0.00 CgdOffset=-1.16p agd=1.33 ags=590.32m ads=998.61m tau1=1.00 tau2=45.00 tm1=3.00 tm2=8.00 Rgis=1.83 Clg=90.50p Rt1={AFnomM*2.48m/AFm} Rt2={AFnomM*23.22m/AFm} Rt3={AFnomM*65.48m/AFm} Ct1={AFm*2.37m/AFnomM} Ct2={AFm*41.84m/AFnomM} Ct3={AFm*386.53m/AFnomM} SchRt1={AFnomS*1.70m/AFs} SchRt2={AFnomS*15.56m/AFs} SchRt3={AFnomS*68.27m/AFs} SchCt1={AFs*2.49m/AFnomS} SchCt2={AFs*53.24m/AFnomS} SchCt3={AFs*385.56m/AFnomS}
+ 
+*** Behavior Optimization *** 
+ 
+.param lvl = if(Schottky,min(level,2),level)
+.param SchT = {if(level-1,1,0)*Thermals*Schottky}
+.param LmflagQ1 = {if(LcsiQ1+0.5,7,6)}
+.param LmflagQ2 = {if(LcsiQ2+0.5,7,6)}
+.param SchottkyD = {-5*(Schottky-1) + Schottky*SchSub}
+.param RgiPerDie = {PackageRgi+DieRgi}
+.param Rgi = {Rgis*RgiPerDie/AFm}
+ 
+*** Module Subcircuit Call *** 
+ 
+X1 V+ Mid V- G1 K1 G2 K2 Tc1 Tc2 TjQ1 TjQ2 TjD1 TjD2 Baseplate Module_HalfBridge PARAMS: BPC = {BPC+1} Thermal = {Thermals+3} SchottkyThermal={SchT+3} Schottky={SchottkyD} Rdss={Rdss} Vths={Vths} AFm={AFm} Afs={AFs} Rp={Rp} Tj={Tj} CgdOffset={CgdOffset} die={die+lvl} Ld={Ld} Lp={Lp} Ls={Ls} LcsiQ1={LcsiQ1} LcsiQ2={LcsiQ2} LmflagQ1={LmflagQ1} LmflagQ2={LmflagQ2} Rdesr={Rdesr} Rpesr={Rpesr} Rsesr={Rsesr} Rgi={Rgi} LgQ1={LgQ1} LgQ2={LgQ2} Cug={Cug} Cag={Cag} Clg={Clg} Rt1={Rt1} Rt2={Rt2} Rt3={Rt3} Ct1={Ct1} Ct2={Ct2} Ct3={Ct3} SchRt1={SchRt1} SchRt2={SchRt2} SchRt3={SchRt3} SchCt1={SchCt1} SchCt2={SchCt2} SchCt3={SchCt3} agd={agd} ads={ads} ags={ags} tm1={tm1} tm2={tm2} tau1={tau1} tau2={tau2} dummy=1m
+
+.ENDS CAS310M17BM3
+
+ 
+.SUBCKT CAS350M12BM3 V+ Mid V- G1 K1 G2 K2 Tc1 Tc2 TjQ1 TjQ2 TjD1 TjD2 Baseplate
+ 
+*** Default Parameters *** 
+ 
+.param BPC=0 Thermals=1 level=3 Vths=0 Rdss=0 Rp=100 Tj={TEMP} SchSub=101 Schottky=1 AFm=4 AFs=4 AFnomM=4 AFnomS=4 die=20 Ld=8.75n Lp=16.10n Ls=2.93n Rdesr=1.31m Rpesr=250.00u Rsesr=1.26m PackageRgi=7.50 DieRgi=2.60 LgQ1=48.00n LgQ2=62.00n Cug=115.10p Cag=176.90p LcsiQ1=0.00 LcsiQ2=0.00 CgdOffset=1.45p agd=1.25 ags=646.89m ads=999.98m tau1=1.00 tau2=35.00 tm1=3.00 tm2=8.00 Rgis=1.22 Clg=90.50p Rt1={AFnomM*3.18m/AFm} Rt2={AFnomM*29.42m/AFm} Rt3={AFnomM*76.62m/AFm} Ct1={AFm*2.11m/AFnomM} Ct2={AFm*35.87m/AFnomM} Ct3={AFm*349.97m/AFnomM} SchRt1={AFnomS*2.35m/AFs} SchRt2={AFnomS*20.13m/AFs} SchRt3={AFnomS*85.40m/AFs} SchCt1={AFs*1.99m/AFnomS} SchCt2={AFs*35.52m/AFnomS} SchCt3={AFs*224.90m/AFnomS}
+ 
+*** Behavior Optimization *** 
+ 
+.param lvl = if(Schottky,min(level,2),level)
+.param SchT = {if(level-1,1,0)*Thermals*Schottky}
+.param LmflagQ1 = {if(LcsiQ1+0.5,7,6)}
+.param LmflagQ2 = {if(LcsiQ2+0.5,7,6)}
+.param SchottkyD = {-5*(Schottky-1) + Schottky*SchSub}
+.param RgiPerDie = {PackageRgi+DieRgi}
+.param Rgi = {Rgis*RgiPerDie/AFm}
+ 
+*** Module Subcircuit Call *** 
+ 
+X1 V+ Mid V- G1 K1 G2 K2 Tc1 Tc2 TjQ1 TjQ2 TjD1 TjD2 Baseplate Module_HalfBridge PARAMS: BPC = {BPC+1} Thermal = {Thermals+3} SchottkyThermal={SchT+3} Schottky={SchottkyD} Rdss={Rdss} Vths={Vths} AFm={AFm} Afs={AFs} Rp={Rp} Tj={Tj} CgdOffset={CgdOffset} die={die+lvl} Ld={Ld} Lp={Lp} Ls={Ls} LcsiQ1={LcsiQ1} LcsiQ2={LcsiQ2} LmflagQ1={LmflagQ1} LmflagQ2={LmflagQ2} Rdesr={Rdesr} Rpesr={Rpesr} Rsesr={Rsesr} Rgi={Rgi} LgQ1={LgQ1} LgQ2={LgQ2} Cug={Cug} Cag={Cag} Clg={Clg} Rt1={Rt1} Rt2={Rt2} Rt3={Rt3} Ct1={Ct1} Ct2={Ct2} Ct3={Ct3} SchRt1={SchRt1} SchRt2={SchRt2} SchRt3={SchRt3} SchCt1={SchCt1} SchCt2={SchCt2} SchCt3={SchCt3} agd={agd} ads={ads} ags={ags} tm1={tm1} tm2={tm2} tau1={tau1} tau2={tau2} dummy=1m
+
+.ENDS CAS350M12BM3
+
+ 
+.SUBCKT CAS380M17HM3 V+ Mid V- G1 K1 G2 K2 Tc1 Tc2 TjQ1 TjQ2 TjD1 TjD2 Baseplate
+ 
+*** Default Parameters *** 
+ 
+.param BPC=0 Thermals=1 level=3 Vths=0 Rdss=0 Rp=100 Tj={TEMP} SchSub=102 Schottky=1 AFm=6 AFs=5 AFnomM=6 AFnomS=5 die=10 Ld=2.45n Lp=5.00n Ls=2.45n Rdesr=106.50u Rpesr=100.00u Rsesr=126.30u PackageRgi=0.00 DieRgi=5.20 LgQ1=12.50n LgQ2=12.50n Cug=175.00p Cag=255.70p LcsiQ1=0.00 LcsiQ2=0.00 CgdOffset=-6.82p agd=1.50 ags=745.05m ads=998.08m tau1=1.00 tau2=45.08 tm1=50.00 tm2=14.70 Rgis=1.99 Clg=4.80p Rt1={AFnomM*1.66m/AFm} Rt2={AFnomM*14.45m/AFm} Rt3={AFnomM*61.84m/AFm} Ct1={AFm*2.63m/AFnomM} Ct2={AFm*49.65m/AFnomM} Ct3={AFm*403.19m/AFnomM} SchRt1={AFnomS*1.34m/AFs} SchRt2={AFnomS*15.96m/AFs} SchRt3={AFnomS*71.80m/AFs} SchCt1={AFs*3.21m/AFnomS} SchCt2={AFs*101.18m/AFnomS} SchCt3={AFs*527.72m/AFnomS}
+ 
+*** Behavior Optimization *** 
+ 
+.param lvl = if(Schottky,min(level,2),level)
+.param SchT = {if(level-1,1,0)*Thermals*Schottky}
+.param LmflagQ1 = {if(LcsiQ1+0.5,7,6)}
+.param LmflagQ2 = {if(LcsiQ2+0.5,7,6)}
+.param SchottkyD = {-5*(Schottky-1) + Schottky*SchSub}
+.param RgiPerDie = {PackageRgi+DieRgi}
+.param Rgi = {Rgis*RgiPerDie/AFm}
+ 
+*** Module Subcircuit Call *** 
+ 
+X1 V+ Mid V- G1 K1 G2 K2 Tc1 Tc2 TjQ1 TjQ2 TjD1 TjD2 Baseplate Module_HalfBridge PARAMS: BPC = {BPC+1} Thermal = {Thermals+3} SchottkyThermal={SchT+3} Schottky={SchottkyD} Rdss={Rdss} Vths={Vths} AFm={AFm} Afs={AFs} Rp={Rp} Tj={Tj} CgdOffset={CgdOffset} die={die+lvl} Ld={Ld} Lp={Lp} Ls={Ls} LcsiQ1={LcsiQ1} LcsiQ2={LcsiQ2} LmflagQ1={LmflagQ1} LmflagQ2={LmflagQ2} Rdesr={Rdesr} Rpesr={Rpesr} Rsesr={Rsesr} Rgi={Rgi} LgQ1={LgQ1} LgQ2={LgQ2} Cug={Cug} Cag={Cag} Clg={Clg} Rt1={Rt1} Rt2={Rt2} Rt3={Rt3} Ct1={Ct1} Ct2={Ct2} Ct3={Ct3} SchRt1={SchRt1} SchRt2={SchRt2} SchRt3={SchRt3} SchCt1={SchCt1} SchCt2={SchCt2} SchCt3={SchCt3} agd={agd} ads={ads} ags={ags} tm1={tm1} tm2={tm2} tau1={tau1} tau2={tau2} dummy=1m
+
+.ENDS CAS380M17HM3
+
+ 
+.SUBCKT CAS480M12HM3 V+ Mid V- G1 K1 G2 K2 Tc1 Tc2 TjQ1 TjQ2 TjD1 TjD2 Baseplate
+ 
+*** Default Parameters *** 
+ 
+.param BPC=0 Thermals=1 level=3 Vths=0 Rdss=0 Rp=100 Tj={TEMP} SchSub=101 Schottky=1 AFm=7 AFs=6 AFnomM=7 AFnomS=6 die=20 Ld=2.45n Lp=5.00n Ls=2.45n Rdesr=106.50u Rpesr=250.00u Rsesr=126.30u PackageRgi=3.00 DieRgi=2.60 LgQ1=12.50n LgQ2=12.50n Cug=315.50p Cag=400.66p LcsiQ1=0.00 LcsiQ2=0.00 CgdOffset=-1.56p agd=1.48 ags=639.53m ads=999.19m tau1=1.00 tau2=45.08 tm1=50.00 tm2=14.70 Rgis=1.84 Clg=237.10p Rt1={AFnomM*3.00m/AFm} Rt2={AFnomM*39.34m/AFm} Rt3={AFnomM*83.35m/AFm} Ct1={AFm*7.14m/AFnomM} Ct2={AFm*160.73m/AFnomM} Ct3={AFm*2.92/AFnomM} SchRt1={AFnomS*2.98m/AFs} SchRt2={AFnomS*39.01m/AFs} SchRt3={AFnomS*82.83m/AFs} SchCt1={AFs*7.09m/AFnomS} SchCt2={AFs*159.44m/AFnomS} SchCt3={AFs*2.84/AFnomS}
+ 
+*** Behavior Optimization *** 
+ 
+.param lvl = if(Schottky,min(level,2),level)
+.param SchT = {if(level-1,1,0)*Thermals*Schottky}
+.param LmflagQ1 = {if(LcsiQ1+0.5,7,6)}
+.param LmflagQ2 = {if(LcsiQ2+0.5,7,6)}
+.param SchottkyD = {-5*(Schottky-1) + Schottky*SchSub}
+.param RgiPerDie = {PackageRgi+DieRgi}
+.param Rgi = {Rgis*RgiPerDie/AFm}
+ 
+*** Module Subcircuit Call *** 
+ 
+X1 V+ Mid V- G1 K1 G2 K2 Tc1 Tc2 TjQ1 TjQ2 TjD1 TjD2 Baseplate Module_HalfBridge PARAMS: BPC = {BPC+1} Thermal = {Thermals+3} SchottkyThermal={SchT+3} Schottky={SchottkyD} Rdss={Rdss} Vths={Vths} AFm={AFm} Afs={AFs} Rp={Rp} Tj={Tj} CgdOffset={CgdOffset} die={die+lvl} Ld={Ld} Lp={Lp} Ls={Ls} LcsiQ1={LcsiQ1} LcsiQ2={LcsiQ2} LmflagQ1={LmflagQ1} LmflagQ2={LmflagQ2} Rdesr={Rdesr} Rpesr={Rpesr} Rsesr={Rsesr} Rgi={Rgi} LgQ1={LgQ1} LgQ2={LgQ2} Cug={Cug} Cag={Cag} Clg={Clg} Rt1={Rt1} Rt2={Rt2} Rt3={Rt3} Ct1={Ct1} Ct2={Ct2} Ct3={Ct3} SchRt1={SchRt1} SchRt2={SchRt2} SchRt3={SchRt3} SchCt1={SchCt1} SchCt2={SchCt2} SchCt3={SchCt3} agd={agd} ads={ads} ags={ags} tm1={tm1} tm2={tm2} tau1={tau1} tau2={tau2} dummy=1m
+
+.ENDS CAS480M12HM3
+
+ 
+.SUBCKT CAS530M12BM3 V+ Mid V- G1 K1 G2 K2 Tc1 Tc2 TjQ1 TjQ2 TjD1 TjD2 Baseplate
+ 
+*** Default Parameters *** 
+ 
+.param BPC=0 Thermals=1 level=3 Vths=0 Rdss=0 Rp=100 Tj={TEMP} SchSub=101 Schottky=1 AFm=6 AFs=6 AFnomM=6 AFnomS=6 die=20 Ld=8.75n Lp=16.10n Ls=2.93n Rdesr=900.00u Rpesr=250.00u Rsesr=970.00u PackageRgi=7.50 DieRgi=2.60 LgQ1=48.00n LgQ2=62.00n Cug=115.10p Cag=176.90p LcsiQ1=0.00 LcsiQ2=0.00 CgdOffset=3.49p agd=1.19 ags=734.97m ads=999.99m tau1=1.00 tau2=45.08 tm1=50.00 tm2=14.70 Rgis=1.04 Clg=90.50p Rt1={AFnomM*1.98m/AFm} Rt2={AFnomM*18.15m/AFm} Rt3={AFnomM*54.46m/AFm} Ct1={AFm*2.73m/AFnomM} Ct2={AFm*50.74m/AFnomM} Ct3={AFm*500.86m/AFnomM} SchRt1={AFnomS*1.60m/AFs} SchRt2={AFnomS*14.24m/AFs} SchRt3={AFnomS*58.83m/AFs} SchCt1={AFs*2.63m/AFnomS} SchCt2={AFs*53.87m/AFnomS} SchCt3={AFs*364.99m/AFnomS}
+ 
+*** Behavior Optimization *** 
+ 
+.param lvl = if(Schottky,min(level,2),level)
+.param SchT = {if(level-1,1,0)*Thermals*Schottky}
+.param LmflagQ1 = {if(LcsiQ1+0.5,7,6)}
+.param LmflagQ2 = {if(LcsiQ2+0.5,7,6)}
+.param SchottkyD = {-5*(Schottky-1) + Schottky*SchSub}
+.param RgiPerDie = {PackageRgi+DieRgi}
+.param Rgi = {Rgis*RgiPerDie/AFm}
+ 
+*** Module Subcircuit Call *** 
+ 
+X1 V+ Mid V- G1 K1 G2 K2 Tc1 Tc2 TjQ1 TjQ2 TjD1 TjD2 Baseplate Module_HalfBridge PARAMS: BPC = {BPC+1} Thermal = {Thermals+3} SchottkyThermal={SchT+3} Schottky={SchottkyD} Rdss={Rdss} Vths={Vths} AFm={AFm} Afs={AFs} Rp={Rp} Tj={Tj} CgdOffset={CgdOffset} die={die+lvl} Ld={Ld} Lp={Lp} Ls={Ls} LcsiQ1={LcsiQ1} LcsiQ2={LcsiQ2} LmflagQ1={LmflagQ1} LmflagQ2={LmflagQ2} Rdesr={Rdesr} Rpesr={Rpesr} Rsesr={Rsesr} Rgi={Rgi} LgQ1={LgQ1} LgQ2={LgQ2} Cug={Cug} Cag={Cag} Clg={Clg} Rt1={Rt1} Rt2={Rt2} Rt3={Rt3} Ct1={Ct1} Ct2={Ct2} Ct3={Ct3} SchRt1={SchRt1} SchRt2={SchRt2} SchRt3={SchRt3} SchCt1={SchCt1} SchCt2={SchCt2} SchCt3={SchCt3} agd={agd} ads={ads} ags={ags} tm1={tm1} tm2={tm2} tau1={tau1} tau2={tau2} dummy=1m
+
+.ENDS CAS530M12BM3
+
+ 
+.SUBCKT EAB450M12XM3 V+ Mid V- G1 K1 G2 K2 Tc1 Tc2 TjQ1 TjQ2 TjD1 TjD2 Baseplate
+ 
+*** Default Parameters *** 
+ 
+.param BPC=0 Thermals=1 level=3 Vths=0 Rdss=0 Rp=100 Tj={TEMP} SchSub=101 Schottky=0 AFm=5 AFs=1 AFnomM=5 AFnomS=1 die=30 Ld=5.90n Lp=4.90n Ls=860.00p Rdesr=720.00u Rpesr=250.00u Rsesr=630.00u PackageRgi=5.80 DieRgi=6.70 LgQ1=12.50n LgQ2=12.50n Cug=175.00p Cag=255.70p LcsiQ1=300.00p LcsiQ2=0.00 CgdOffset=-4.53p agd=1.07 ags=583.97m ads=997.66m tau1=1.00 tau2=47.08 tm1=50.00 tm2=18.19 Rgis=1.46 Clg=4.80p Rt1={AFnomM*1.56m/AFm} Rt2={AFnomM*14.05m/AFm} Rt3={AFnomM*77.28m/AFm} Ct1={AFm*1.73m/AFnomM} Ct2={AFm*55.15m/AFnomM} Ct3={AFm*381.32m/AFnomM} SchRt1={AFnomS*1.56m/AFs} SchRt2={AFnomS*14.05m/AFs} SchRt3={AFnomS*77.28m/AFs} SchCt1={AFs*1.73m/AFnomS} SchCt2={AFs*55.15m/AFnomS} SchCt3={AFs*381.32m/AFnomS}
+ 
+*** Behavior Optimization *** 
+ 
+.param lvl = if(Schottky,min(level,2),level)
+.param SchT = {if(level-1,1,0)*Thermals*Schottky}
+.param LmflagQ1 = {if(LcsiQ1+0.5,7,6)}
+.param LmflagQ2 = {if(LcsiQ2+0.5,7,6)}
+.param SchottkyD = {-5*(Schottky-1) + Schottky*SchSub}
+.param RgiPerDie = {PackageRgi+DieRgi}
+.param Rgi = {Rgis*RgiPerDie/AFm}
+ 
+*** Module Subcircuit Call *** 
+ 
+X1 V+ Mid V- G1 K1 G2 K2 Tc1 Tc2 TjQ1 TjQ2 TjD1 TjD2 Baseplate Module_HalfBridge PARAMS: BPC = {BPC+1} Thermal = {Thermals+3} SchottkyThermal={SchT+3} Schottky={SchottkyD} Rdss={Rdss} Vths={Vths} AFm={AFm} Afs={AFs} Rp={Rp} Tj={Tj} CgdOffset={CgdOffset} die={die+lvl} Ld={Ld} Lp={Lp} Ls={Ls} LcsiQ1={LcsiQ1} LcsiQ2={LcsiQ2} LmflagQ1={LmflagQ1} LmflagQ2={LmflagQ2} Rdesr={Rdesr} Rpesr={Rpesr} Rsesr={Rsesr} Rgi={Rgi} LgQ1={LgQ1} LgQ2={LgQ2} Cug={Cug} Cag={Cag} Clg={Clg} Rt1={Rt1} Rt2={Rt2} Rt3={Rt3} Ct1={Ct1} Ct2={Ct2} Ct3={Ct3} SchRt1={SchRt1} SchRt2={SchRt2} SchRt3={SchRt3} SchCt1={SchCt1} SchCt2={SchCt2} SchCt3={SchCt3} agd={agd} ads={ads} ags={ags} tm1={tm1} tm2={tm2} tau1={tau1} tau2={tau2} dummy=1m
+
+.ENDS EAB450M12XM3
+
+ 
+.SUBCKT WAB300M12BM3 V+ Mid V- G1 K1 G2 K2 Tc1 Tc2 TjQ1 TjQ2 TjD1 TjD2 Baseplate
+ 
+*** Default Parameters *** 
+ 
+.param BPC=0 Thermals=1 level=3 Vths=0 Rdss=0 Rp=100 Tj={TEMP} SchSub=101 Schottky=0 AFm=4 AFs=1 AFnomM=4 AFnomS=1 die=20 Ld=6.30n Lp=19.00n Ls=2.50n Rdesr=600.00u Rpesr=250.00u Rsesr=510.00u PackageRgi=3.00 DieRgi=2.60 LgQ1=25.00n LgQ2=20.00n Cug=89.50p Cag=151.60p LcsiQ1=0.00 LcsiQ2=0.00 CgdOffset=10.10p agd=1.18 ags=566.72m ads=1000.00m tau1=1.00 tau2=45.88 tm1=50.00 tm2=9.11 Rgis=1.34 Clg=107.00p Rt1={AFnomM*29.46m/AFm} Rt2={AFnomM*59.51m/AFm} Rt3={AFnomM*74.12m/AFm} Ct1={AFm*72.26m/AFnomM} Ct2={AFm*253.46m/AFnomM} Ct3={AFm*3.98/AFnomM} SchRt1={AFnomS*29.46m/AFs} SchRt2={AFnomS*59.51m/AFs} SchRt3={AFnomS*74.12m/AFs} SchCt1={AFs*72.26m/AFnomS} SchCt2={AFs*253.46m/AFnomS} SchCt3={AFs*3.98/AFnomS}
+ 
+*** Behavior Optimization *** 
+ 
+.param lvl = if(Schottky,min(level,2),level)
+.param SchT = {if(level-1,1,0)*Thermals*Schottky}
+.param LmflagQ1 = {if(LcsiQ1+0.5,7,6)}
+.param LmflagQ2 = {if(LcsiQ2+0.5,7,6)}
+.param SchottkyD = {-5*(Schottky-1) + Schottky*SchSub}
+.param RgiPerDie = {PackageRgi+DieRgi}
+.param Rgi = {Rgis*RgiPerDie/AFm}
+ 
+*** Module Subcircuit Call *** 
+ 
+X1 V+ Mid V- G1 K1 G2 K2 Tc1 Tc2 TjQ1 TjQ2 TjD1 TjD2 Baseplate Module_HalfBridge PARAMS: BPC = {BPC+1} Thermal = {Thermals+3} SchottkyThermal={SchT+3} Schottky={SchottkyD} Rdss={Rdss} Vths={Vths} AFm={AFm} Afs={AFs} Rp={Rp} Tj={Tj} CgdOffset={CgdOffset} die={die+lvl} Ld={Ld} Lp={Lp} Ls={Ls} LcsiQ1={LcsiQ1} LcsiQ2={LcsiQ2} LmflagQ1={LmflagQ1} LmflagQ2={LmflagQ2} Rdesr={Rdesr} Rpesr={Rpesr} Rsesr={Rsesr} Rgi={Rgi} LgQ1={LgQ1} LgQ2={LgQ2} Cug={Cug} Cag={Cag} Clg={Clg} Rt1={Rt1} Rt2={Rt2} Rt3={Rt3} Ct1={Ct1} Ct2={Ct2} Ct3={Ct3} SchRt1={SchRt1} SchRt2={SchRt2} SchRt3={SchRt3} SchCt1={SchCt1} SchCt2={SchCt2} SchCt3={SchCt3} agd={agd} ads={ads} ags={ags} tm1={tm1} tm2={tm2} tau1={tau1} tau2={tau2} dummy=1m
+
+.ENDS WAB300M12BM3
+
+ 
+.SUBCKT WAB400M12BM3 V+ Mid V- G1 K1 G2 K2 Tc1 Tc2 TjQ1 TjQ2 TjD1 TjD2 Baseplate
+ 
+*** Default Parameters *** 
+ 
+.param BPC=0 Thermals=1 level=3 Vths=0 Rdss=0 Rp=100 Tj={TEMP} SchSub=101 Schottky=0 AFm=4 AFs=1 AFnomM=4 AFnomS=1 die=40 Ld=6.30n Lp=19.00n Ls=2.50n Rdesr=600.00u Rpesr=250.00u Rsesr=510.00u PackageRgi=4.00 DieRgi=6.70 LgQ1=25.00n LgQ2=20.00n Cug=89.50p Cag=151.60p LcsiQ1=0.00 LcsiQ2=0.00 CgdOffset=-10.00p agd=1.50 ags=526.19m ads=996.04m tau1=1.00 tau2=48.17 tm1=50.00 tm2=6.48 Rgis=1.56 Clg=107.00p Rt1={AFnomM*27.11m/AFm} Rt2={AFnomM*50.43m/AFm} Rt3={AFnomM*50.96m/AFm} Ct1={AFm*96.26m/AFnomM} Ct2={AFm*323.62m/AFnomM} Ct3={AFm*3.39/AFnomM} SchRt1={AFnomS*27.11m/AFs} SchRt2={AFnomS*50.43m/AFs} SchRt3={AFnomS*50.96m/AFs} SchCt1={AFs*96.26m/AFnomS} SchCt2={AFs*323.62m/AFnomS} SchCt3={AFs*3.39/AFnomS}
+ 
+*** Behavior Optimization *** 
+ 
+.param lvl = if(Schottky,min(level,2),level)
+.param SchT = {if(level-1,1,0)*Thermals*Schottky}
+.param LmflagQ1 = {if(LcsiQ1+0.5,7,6)}
+.param LmflagQ2 = {if(LcsiQ2+0.5,7,6)}
+.param SchottkyD = {-5*(Schottky-1) + Schottky*SchSub}
+.param RgiPerDie = {PackageRgi+DieRgi}
+.param Rgi = {Rgis*RgiPerDie/AFm}
+ 
+*** Module Subcircuit Call *** 
+ 
+X1 V+ Mid V- G1 K1 G2 K2 Tc1 Tc2 TjQ1 TjQ2 TjD1 TjD2 Baseplate Module_HalfBridge PARAMS: BPC = {BPC+1} Thermal = {Thermals+3} SchottkyThermal={SchT+3} Schottky={SchottkyD} Rdss={Rdss} Vths={Vths} AFm={AFm} Afs={AFs} Rp={Rp} Tj={Tj} CgdOffset={CgdOffset} die={die+lvl} Ld={Ld} Lp={Lp} Ls={Ls} LcsiQ1={LcsiQ1} LcsiQ2={LcsiQ2} LmflagQ1={LmflagQ1} LmflagQ2={LmflagQ2} Rdesr={Rdesr} Rpesr={Rpesr} Rsesr={Rsesr} Rgi={Rgi} LgQ1={LgQ1} LgQ2={LgQ2} Cug={Cug} Cag={Cag} Clg={Clg} Rt1={Rt1} Rt2={Rt2} Rt3={Rt3} Ct1={Ct1} Ct2={Ct2} Ct3={Ct3} SchRt1={SchRt1} SchRt2={SchRt2} SchRt3={SchRt3} SchCt1={SchCt1} SchCt2={SchCt2} SchCt3={SchCt3} agd={agd} ads={ads} ags={ags} tm1={tm1} tm2={tm2} tau1={tau1} tau2={tau2} dummy=1m
+
+.ENDS WAB400M12BM3
+
+ 
+.SUBCKT WAS175M12BM3 V+ Mid V- G1 K1 G2 K2 Tc1 Tc2 TjQ1 TjQ2 TjD1 TjD2 Baseplate
+ 
+*** Default Parameters *** 
+ 
+.param BPC=0 Thermals=1 level=3 Vths=0 Rdss=0 Rp=100 Tj={TEMP} SchSub=101 Schottky=1 AFm=2 AFs=2 AFnomM=2 AFnomS=2 die=20 Ld=8.75n Lp=16.10n Ls=2.93n Rdesr=2.30m Rpesr=250.00u Rsesr=2.12m PackageRgi=7.50 DieRgi=2.60 LgQ1=48.00n LgQ2=62.00n Cug=115.10p Cag=176.90p LcsiQ1=0.00 LcsiQ2=0.00 CgdOffset=8.41p agd=1.25 ags=730.06m ads=999.99m tau1=1.00 tau2=35.00 tm1=3.00 tm2=8.00 Rgis=1.22 Clg=90.50p Rt1={AFnomM*5.79m/AFm} Rt2={AFnomM*48.41m/AFm} Rt3={AFnomM*136.51m/AFm} Ct1={AFm*1.03m/AFnomM} Ct2={AFm*15.06m/AFnomM} Ct3={AFm*118.80m/AFnomM} SchRt1={AFnomS*4.58m/AFs} SchRt2={AFnomS*43.28m/AFs} SchRt3={AFnomS*164.20m/AFs} SchCt1={AFs*1.21m/AFnomS} SchCt2={AFs*21.50m/AFnomS} SchCt3={AFs*109.71m/AFnomS}
+ 
+*** Behavior Optimization *** 
+ 
+.param lvl = if(Schottky,min(level,2),level)
+.param SchT = {if(level-1,1,0)*Thermals*Schottky}
+.param LmflagQ1 = {if(LcsiQ1+0.5,7,6)}
+.param LmflagQ2 = {if(LcsiQ2+0.5,7,6)}
+.param SchottkyD = {-5*(Schottky-1) + Schottky*SchSub}
+.param RgiPerDie = {PackageRgi+DieRgi}
+.param Rgi = {Rgis*RgiPerDie/AFm}
+ 
+*** Module Subcircuit Call *** 
+ 
+X1 V+ Mid V- G1 K1 G2 K2 Tc1 Tc2 TjQ1 TjQ2 TjD1 TjD2 Baseplate Module_HalfBridge PARAMS: BPC = {BPC+1} Thermal = {Thermals+3} SchottkyThermal={SchT+3} Schottky={SchottkyD} Rdss={Rdss} Vths={Vths} AFm={AFm} Afs={AFs} Rp={Rp} Tj={Tj} CgdOffset={CgdOffset} die={die+lvl} Ld={Ld} Lp={Lp} Ls={Ls} LcsiQ1={LcsiQ1} LcsiQ2={LcsiQ2} LmflagQ1={LmflagQ1} LmflagQ2={LmflagQ2} Rdesr={Rdesr} Rpesr={Rpesr} Rsesr={Rsesr} Rgi={Rgi} LgQ1={LgQ1} LgQ2={LgQ2} Cug={Cug} Cag={Cag} Clg={Clg} Rt1={Rt1} Rt2={Rt2} Rt3={Rt3} Ct1={Ct1} Ct2={Ct2} Ct3={Ct3} SchRt1={SchRt1} SchRt2={SchRt2} SchRt3={SchRt3} SchCt1={SchCt1} SchCt2={SchCt2} SchCt3={SchCt3} agd={agd} ads={ads} ags={ags} tm1={tm1} tm2={tm2} tau1={tau1} tau2={tau2} dummy=1m
+
+.ENDS WAS175M12BM3
+
+ 
+.SUBCKT WAS310M17BM3 V+ Mid V- G1 K1 G2 K2 Tc1 Tc2 TjQ1 TjQ2 TjD1 TjD2 Baseplate
+ 
+*** Default Parameters *** 
+ 
+.param BPC=0 Thermals=1 level=3 Vths=0 Rdss=0 Rp=100 Tj={TEMP} SchSub=102 Schottky=1 AFm=4 AFs=4 AFnomM=4 AFnomS=4 die=10 Ld=8.75n Lp=16.10n Ls=2.93n Rdesr=1.31m Rpesr=250.00u Rsesr=1.26m PackageRgi=0.00 DieRgi=5.20 LgQ1=48.00n LgQ2=62.00n Cug=115.10p Cag=176.90p LcsiQ1=0.00 LcsiQ2=0.00 CgdOffset=-1.16p agd=1.33 ags=590.32m ads=998.61m tau1=1.00 tau2=45.00 tm1=3.00 tm2=8.00 Rgis=1.83 Clg=90.50p Rt1={AFnomM*2.48m/AFm} Rt2={AFnomM*23.22m/AFm} Rt3={AFnomM*65.48m/AFm} Ct1={AFm*2.37m/AFnomM} Ct2={AFm*41.84m/AFnomM} Ct3={AFm*386.53m/AFnomM} SchRt1={AFnomS*1.70m/AFs} SchRt2={AFnomS*15.56m/AFs} SchRt3={AFnomS*68.27m/AFs} SchCt1={AFs*2.49m/AFnomS} SchCt2={AFs*53.24m/AFnomS} SchCt3={AFs*385.56m/AFnomS}
+ 
+*** Behavior Optimization *** 
+ 
+.param lvl = if(Schottky,min(level,2),level)
+.param SchT = {if(level-1,1,0)*Thermals*Schottky}
+.param LmflagQ1 = {if(LcsiQ1+0.5,7,6)}
+.param LmflagQ2 = {if(LcsiQ2+0.5,7,6)}
+.param SchottkyD = {-5*(Schottky-1) + Schottky*SchSub}
+.param RgiPerDie = {PackageRgi+DieRgi}
+.param Rgi = {Rgis*RgiPerDie/AFm}
+ 
+*** Module Subcircuit Call *** 
+ 
+X1 V+ Mid V- G1 K1 G2 K2 Tc1 Tc2 TjQ1 TjQ2 TjD1 TjD2 Baseplate Module_HalfBridge PARAMS: BPC = {BPC+1} Thermal = {Thermals+3} SchottkyThermal={SchT+3} Schottky={SchottkyD} Rdss={Rdss} Vths={Vths} AFm={AFm} Afs={AFs} Rp={Rp} Tj={Tj} CgdOffset={CgdOffset} die={die+lvl} Ld={Ld} Lp={Lp} Ls={Ls} LcsiQ1={LcsiQ1} LcsiQ2={LcsiQ2} LmflagQ1={LmflagQ1} LmflagQ2={LmflagQ2} Rdesr={Rdesr} Rpesr={Rpesr} Rsesr={Rsesr} Rgi={Rgi} LgQ1={LgQ1} LgQ2={LgQ2} Cug={Cug} Cag={Cag} Clg={Clg} Rt1={Rt1} Rt2={Rt2} Rt3={Rt3} Ct1={Ct1} Ct2={Ct2} Ct3={Ct3} SchRt1={SchRt1} SchRt2={SchRt2} SchRt3={SchRt3} SchCt1={SchCt1} SchCt2={SchCt2} SchCt3={SchCt3} agd={agd} ads={ads} ags={ags} tm1={tm1} tm2={tm2} tau1={tau1} tau2={tau2} dummy=1m
+
+.ENDS WAS310M17BM3
+
+ 
+.SUBCKT WAS350M12BM3 V+ Mid V- G1 K1 G2 K2 Tc1 Tc2 TjQ1 TjQ2 TjD1 TjD2 Baseplate
+ 
+*** Default Parameters *** 
+ 
+.param BPC=0 Thermals=1 level=3 Vths=0 Rdss=0 Rp=100 Tj={TEMP} SchSub=101 Schottky=1 AFm=4 AFs=4 AFnomM=4 AFnomS=4 die=20 Ld=8.75n Lp=16.10n Ls=2.93n Rdesr=1.31m Rpesr=250.00u Rsesr=1.26m PackageRgi=7.50 DieRgi=2.60 LgQ1=48.00n LgQ2=62.00n Cug=115.10p Cag=176.90p LcsiQ1=0.00 LcsiQ2=0.00 CgdOffset=1.45p agd=1.25 ags=646.89m ads=999.98m tau1=1.00 tau2=35.00 tm1=3.00 tm2=8.00 Rgis=1.22 Clg=90.50p Rt1={AFnomM*3.18m/AFm} Rt2={AFnomM*29.42m/AFm} Rt3={AFnomM*76.62m/AFm} Ct1={AFm*2.11m/AFnomM} Ct2={AFm*35.87m/AFnomM} Ct3={AFm*349.97m/AFnomM} SchRt1={AFnomS*2.35m/AFs} SchRt2={AFnomS*20.13m/AFs} SchRt3={AFnomS*85.40m/AFs} SchCt1={AFs*1.99m/AFnomS} SchCt2={AFs*35.52m/AFnomS} SchCt3={AFs*224.90m/AFnomS}
+ 
+*** Behavior Optimization *** 
+ 
+.param lvl = if(Schottky,min(level,2),level)
+.param SchT = {if(level-1,1,0)*Thermals*Schottky}
+.param LmflagQ1 = {if(LcsiQ1+0.5,7,6)}
+.param LmflagQ2 = {if(LcsiQ2+0.5,7,6)}
+.param SchottkyD = {-5*(Schottky-1) + Schottky*SchSub}
+.param RgiPerDie = {PackageRgi+DieRgi}
+.param Rgi = {Rgis*RgiPerDie/AFm}
+ 
+*** Module Subcircuit Call *** 
+ 
+X1 V+ Mid V- G1 K1 G2 K2 Tc1 Tc2 TjQ1 TjQ2 TjD1 TjD2 Baseplate Module_HalfBridge PARAMS: BPC = {BPC+1} Thermal = {Thermals+3} SchottkyThermal={SchT+3} Schottky={SchottkyD} Rdss={Rdss} Vths={Vths} AFm={AFm} Afs={AFs} Rp={Rp} Tj={Tj} CgdOffset={CgdOffset} die={die+lvl} Ld={Ld} Lp={Lp} Ls={Ls} LcsiQ1={LcsiQ1} LcsiQ2={LcsiQ2} LmflagQ1={LmflagQ1} LmflagQ2={LmflagQ2} Rdesr={Rdesr} Rpesr={Rpesr} Rsesr={Rsesr} Rgi={Rgi} LgQ1={LgQ1} LgQ2={LgQ2} Cug={Cug} Cag={Cag} Clg={Clg} Rt1={Rt1} Rt2={Rt2} Rt3={Rt3} Ct1={Ct1} Ct2={Ct2} Ct3={Ct3} SchRt1={SchRt1} SchRt2={SchRt2} SchRt3={SchRt3} SchCt1={SchCt1} SchCt2={SchCt2} SchCt3={SchCt3} agd={agd} ads={ads} ags={ags} tm1={tm1} tm2={tm2} tau1={tau1} tau2={tau2} dummy=1m
+
+.ENDS WAS350M12BM3
+
+ 
+.SUBCKT WAS530M12BM3 V+ Mid V- G1 K1 G2 K2 Tc1 Tc2 TjQ1 TjQ2 TjD1 TjD2 Baseplate
+ 
+*** Default Parameters *** 
+ 
+.param BPC=0 Thermals=1 level=3 Vths=0 Rdss=0 Rp=100 Tj={TEMP} SchSub=101 Schottky=1 AFm=6 AFs=6 AFnomM=6 AFnomS=6 die=20 Ld=8.75n Lp=16.10n Ls=2.93n Rdesr=900.00u Rpesr=250.00u Rsesr=970.00u PackageRgi=7.50 DieRgi=2.60 LgQ1=48.00n LgQ2=62.00n Cug=115.10p Cag=176.90p LcsiQ1=0.00 LcsiQ2=0.00 CgdOffset=3.49p agd=1.19 ags=734.97m ads=999.99m tau1=1.00 tau2=45.08 tm1=50.00 tm2=14.70 Rgis=1.04 Clg=90.50p Rt1={AFnomM*1.98m/AFm} Rt2={AFnomM*18.15m/AFm} Rt3={AFnomM*54.46m/AFm} Ct1={AFm*2.73m/AFnomM} Ct2={AFm*50.74m/AFnomM} Ct3={AFm*500.86m/AFnomM} SchRt1={AFnomS*1.60m/AFs} SchRt2={AFnomS*14.24m/AFs} SchRt3={AFnomS*58.83m/AFs} SchCt1={AFs*2.63m/AFnomS} SchCt2={AFs*53.87m/AFnomS} SchCt3={AFs*364.99m/AFnomS}
+ 
+*** Behavior Optimization *** 
+ 
+.param lvl = if(Schottky,min(level,2),level)
+.param SchT = {if(level-1,1,0)*Thermals*Schottky}
+.param LmflagQ1 = {if(LcsiQ1+0.5,7,6)}
+.param LmflagQ2 = {if(LcsiQ2+0.5,7,6)}
+.param SchottkyD = {-5*(Schottky-1) + Schottky*SchSub}
+.param RgiPerDie = {PackageRgi+DieRgi}
+.param Rgi = {Rgis*RgiPerDie/AFm}
+ 
+*** Module Subcircuit Call *** 
+ 
+X1 V+ Mid V- G1 K1 G2 K2 Tc1 Tc2 TjQ1 TjQ2 TjD1 TjD2 Baseplate Module_HalfBridge PARAMS: BPC = {BPC+1} Thermal = {Thermals+3} SchottkyThermal={SchT+3} Schottky={SchottkyD} Rdss={Rdss} Vths={Vths} AFm={AFm} Afs={AFs} Rp={Rp} Tj={Tj} CgdOffset={CgdOffset} die={die+lvl} Ld={Ld} Lp={Lp} Ls={Ls} LcsiQ1={LcsiQ1} LcsiQ2={LcsiQ2} LmflagQ1={LmflagQ1} LmflagQ2={LmflagQ2} Rdesr={Rdesr} Rpesr={Rpesr} Rsesr={Rsesr} Rgi={Rgi} LgQ1={LgQ1} LgQ2={LgQ2} Cug={Cug} Cag={Cag} Clg={Clg} Rt1={Rt1} Rt2={Rt2} Rt3={Rt3} Ct1={Ct1} Ct2={Ct2} Ct3={Ct3} SchRt1={SchRt1} SchRt2={SchRt2} SchRt3={SchRt3} SchCt1={SchCt1} SchCt2={SchCt2} SchCt3={SchCt3} agd={agd} ads={ads} ags={ags} tm1={tm1} tm2={tm2} tau1={tau1} tau2={tau2} dummy=1m
+
+.ENDS WAS530M12BM3
+
+ 
+.SUBCKT CAB011M12FM3 V+ Mid V- G1 K1 G2 K2 Tc1 Tc2 TjQ1 TjQ2 TjD1 TjD2 Baseplate
+ 
+*** Default Parameters *** 
+ 
+.param BPC=0 Thermals=1 level=3 Vths=0 Rdss=0 Rp=100 Tj={TEMP} SchSub=101 Schottky=0 AFm=2 AFs=1 AFnomM=2 AFnomS=1 die=50 Ld=7.50n Lp=4.60n Ls=3.70n Rdesr=1.98m Rpesr=250.00u Rsesr=1.85m PackageRgi=3.10 DieRgi=3.30 LgQ1=12.50n LgQ2=12.50n Cug=61.50p Cag=98.40p LcsiQ1=0.00 LcsiQ2=0.00 CgdOffset=4.56p agd=1.50 ags=540.32m ads=999.88m tau1=1.00 tau2=42.45 tm1=50.00 tm2=4.75 Rgis=1.27 Clg=55.71p Rt1={AFnomM*6.10m/AFm} Rt2={AFnomM*57.51m/AFm} Rt3={AFnomM*362.95m/AFm} Ct1={AFm*794.40u/AFnomM} Ct2={AFm*16.59m/AFnomM} Ct3={AFm*134.49m/AFnomM} SchRt1={AFnomS*6.10m/AFs} SchRt2={AFnomS*57.51m/AFs} SchRt3={AFnomS*362.95m/AFs} SchCt1={AFs*794.40u/AFnomS} SchCt2={AFs*16.59m/AFnomS} SchCt3={AFs*134.49m/AFnomS}
+ 
+*** Behavior Optimization *** 
+ 
+.param lvl = if(Schottky,min(level,2),level)
+.param SchT = {if(level-1,1,0)*Thermals*Schottky}
+.param LmflagQ1 = {if(LcsiQ1+0.5,7,6)}
+.param LmflagQ2 = {if(LcsiQ2+0.5,7,6)}
+.param SchottkyD = {-5*(Schottky-1) + Schottky*SchSub}
+.param RgiPerDie = {PackageRgi+DieRgi}
+.param Rgi = {Rgis*RgiPerDie/AFm}
+ 
+*** Module Subcircuit Call *** 
+ 
+X1 V+ Mid V- G1 K1 G2 K2 Tc1 Tc2 TjQ1 TjQ2 TjD1 TjD2 Baseplate Module_HalfBridge PARAMS: BPC = {BPC+1} Thermal = {Thermals+3} SchottkyThermal={SchT+3} Schottky={SchottkyD} Rdss={Rdss} Vths={Vths} AFm={AFm} Afs={AFs} Rp={Rp} Tj={Tj} CgdOffset={CgdOffset} die={die+lvl} Ld={Ld} Lp={Lp} Ls={Ls} LcsiQ1={LcsiQ1} LcsiQ2={LcsiQ2} LmflagQ1={LmflagQ1} LmflagQ2={LmflagQ2} Rdesr={Rdesr} Rpesr={Rpesr} Rsesr={Rsesr} Rgi={Rgi} LgQ1={LgQ1} LgQ2={LgQ2} Cug={Cug} Cag={Cag} Clg={Clg} Rt1={Rt1} Rt2={Rt2} Rt3={Rt3} Ct1={Ct1} Ct2={Ct2} Ct3={Ct3} SchRt1={SchRt1} SchRt2={SchRt2} SchRt3={SchRt3} SchCt1={SchCt1} SchCt2={SchCt2} SchCt3={SchCt3} agd={agd} ads={ads} ags={ags} tm1={tm1} tm2={tm2} tau1={tau1} tau2={tau2} dummy=1m
+
+.ENDS CAB011M12FM3
+
+ 
+.SUBCKT CAB016M12FM3 V+ Mid V- G1 K1 G2 K2 Tc1 Tc2 TjQ1 TjQ2 TjD1 TjD2 Baseplate
+ 
+*** Default Parameters *** 
+ 
+.param BPC=0 Thermals=1 level=3 Vths=0 Rdss=0 Rp=100 Tj={TEMP} SchSub=101 Schottky=0 AFm=2 AFs=1 AFnomM=2 AFnomS=1 die=60 Ld=7.54n Lp=4.60n Ls=3.70n Rdesr=1.98m Rpesr=250.00u Rsesr=1.85m PackageRgi=3.20 DieRgi=1.70 LgQ1=12.50n LgQ2=12.50n Cug=61.50p Cag=98.40p LcsiQ1=0.00 LcsiQ2=0.00 CgdOffset=5.10p agd=1.28 ags=518.32m ads=999.75m tau1=1.00 tau2=33.65 tm1=50.00 tm2=3.98 Rgis=1.30 Clg=55.71p Rt1={AFnomM*10.16m/AFm} Rt2={AFnomM*93.25m/AFm} Rt3={AFnomM*436.72m/AFm} Ct1={AFm*594.46u/AFnomM} Ct2={AFm*10.70m/AFnomM} Ct3={AFm*99.91m/AFnomM} SchRt1={AFnomS*10.16m/AFs} SchRt2={AFnomS*93.25m/AFs} SchRt3={AFnomS*436.72m/AFs} SchCt1={AFs*594.46u/AFnomS} SchCt2={AFs*10.70m/AFnomS} SchCt3={AFs*99.91m/AFnomS}
+ 
+*** Behavior Optimization *** 
+ 
+.param lvl = if(Schottky,min(level,2),level)
+.param SchT = {if(level-1,1,0)*Thermals*Schottky}
+.param LmflagQ1 = {if(LcsiQ1+0.5,7,6)}
+.param LmflagQ2 = {if(LcsiQ2+0.5,7,6)}
+.param SchottkyD = {-5*(Schottky-1) + Schottky*SchSub}
+.param RgiPerDie = {PackageRgi+DieRgi}
+.param Rgi = {Rgis*RgiPerDie/AFm}
+ 
+*** Module Subcircuit Call *** 
+ 
+X1 V+ Mid V- G1 K1 G2 K2 Tc1 Tc2 TjQ1 TjQ2 TjD1 TjD2 Baseplate Module_HalfBridge PARAMS: BPC = {BPC+1} Thermal = {Thermals+3} SchottkyThermal={SchT+3} Schottky={SchottkyD} Rdss={Rdss} Vths={Vths} AFm={AFm} Afs={AFs} Rp={Rp} Tj={Tj} CgdOffset={CgdOffset} die={die+lvl} Ld={Ld} Lp={Lp} Ls={Ls} LcsiQ1={LcsiQ1} LcsiQ2={LcsiQ2} LmflagQ1={LmflagQ1} LmflagQ2={LmflagQ2} Rdesr={Rdesr} Rpesr={Rpesr} Rsesr={Rsesr} Rgi={Rgi} LgQ1={LgQ1} LgQ2={LgQ2} Cug={Cug} Cag={Cag} Clg={Clg} Rt1={Rt1} Rt2={Rt2} Rt3={Rt3} Ct1={Ct1} Ct2={Ct2} Ct3={Ct3} SchRt1={SchRt1} SchRt2={SchRt2} SchRt3={SchRt3} SchCt1={SchCt1} SchCt2={SchCt2} SchCt3={SchCt3} agd={agd} ads={ads} ags={ags} tm1={tm1} tm2={tm2} tau1={tau1} tau2={tau2} dummy=1m
+
+.ENDS CAB016M12FM3
+
+ 
+.SUBCKT CAB008M12GM3 V+ Mid V- G1 K1 G2 K2 Tc1 Tc2 TjQ1 TjQ2 TjD1 TjD2 Baseplate
+ 
+*** Default Parameters *** 
+ 
+.param BPC=0 Thermals=1 level=3 Vths=0 Rdss=0 Rp=100 Tj={TEMP} SchSub=101 Schottky=0 AFm=4 AFs=1 AFnomM=4 AFnomS=1 die=60 Ld=3.55n Lp=5.00n Ls=3.55n Rdesr=1.02m Rpesr=250.00u Rsesr=940.00u PackageRgi=5.00 DieRgi=1.70 LgQ1=12.50n LgQ2=12.50n Cug=81.30p Cag=221.30p LcsiQ1=0.00 LcsiQ2=0.00 CgdOffset=3.73p agd=1.43 ags=596.13m ads=997.61m tau1=1.00 tau2=41.53 tm1=50.00 tm2=1.02 Rgis=1.49 Clg=119.40p Rt1={AFnomM*4.53m/AFm} Rt2={AFnomM*39.36m/AFm} Rt3={AFnomM*258.53m/AFm} Ct1={AFm*908.75u/AFnomM} Ct2={AFm*17.80m/AFnomM} Ct3={AFm*144.03m/AFnomM} SchRt1={AFnomS*4.53m/AFs} SchRt2={AFnomS*39.36m/AFs} SchRt3={AFnomS*258.53m/AFs} SchCt1={AFs*908.75u/AFnomS} SchCt2={AFs*17.80m/AFnomS} SchCt3={AFs*144.03m/AFnomS}
+ 
+*** Behavior Optimization *** 
+ 
+.param lvl = if(Schottky,min(level,2),level)
+.param SchT = {if(level-1,1,0)*Thermals*Schottky}
+.param LmflagQ1 = {if(LcsiQ1+0.5,7,6)}
+.param LmflagQ2 = {if(LcsiQ2+0.5,7,6)}
+.param SchottkyD = {-5*(Schottky-1) + Schottky*SchSub}
+.param RgiPerDie = {PackageRgi+DieRgi}
+.param Rgi = {Rgis*RgiPerDie/AFm}
+ 
+*** Module Subcircuit Call *** 
+ 
+X1 V+ Mid V- G1 K1 G2 K2 Tc1 Tc2 TjQ1 TjQ2 TjD1 TjD2 Baseplate Module_HalfBridge PARAMS: BPC = {BPC+1} Thermal = {Thermals+3} SchottkyThermal={SchT+3} Schottky={SchottkyD} Rdss={Rdss} Vths={Vths} AFm={AFm} Afs={AFs} Rp={Rp} Tj={Tj} CgdOffset={CgdOffset} die={die+lvl} Ld={Ld} Lp={Lp} Ls={Ls} LcsiQ1={LcsiQ1} LcsiQ2={LcsiQ2} LmflagQ1={LmflagQ1} LmflagQ2={LmflagQ2} Rdesr={Rdesr} Rpesr={Rpesr} Rsesr={Rsesr} Rgi={Rgi} LgQ1={LgQ1} LgQ2={LgQ2} Cug={Cug} Cag={Cag} Clg={Clg} Rt1={Rt1} Rt2={Rt2} Rt3={Rt3} Ct1={Ct1} Ct2={Ct2} Ct3={Ct3} SchRt1={SchRt1} SchRt2={SchRt2} SchRt3={SchRt3} SchCt1={SchCt1} SchCt2={SchCt2} SchCt3={SchCt3} agd={agd} ads={ads} ags={ags} tm1={tm1} tm2={tm2} tau1={tau1} tau2={tau2} dummy=1m
+
+.ENDS CAB008M12GM3
+
+ 
+.SUBCKT CAB008A12GM3 V+ Mid V- G1 K1 G2 K2 Tc1 Tc2 TjQ1 TjQ2 TjD1 TjD2 Baseplate
+ 
+*** Default Parameters *** 
+ 
+.param BPC=0 Thermals=1 level=3 Vths=0 Rdss=0 Rp=100 Tj={TEMP} SchSub=101 Schottky=0 AFm=4 AFs=1 AFnomM=4 AFnomS=1 die=60 Ld=3.55n Lp=5.00n Ls=3.55n Rdesr=1.02m Rpesr=250.00u Rsesr=940.00u PackageRgi=5.00 DieRgi=1.70 LgQ1=12.50n LgQ2=12.50n Cug=44.50p Cag=123.20p LcsiQ1=0.00 LcsiQ2=0.00 CgdOffset=2.45p agd=1.44 ags=619.36m ads=996.28m tau1=1.00 tau2=47.28 tm1=50.00 tm2=1.05 Rgis=1.56 Clg=67.60p Rt1={AFnomM*4.85m/AFm} Rt2={AFnomM*41.06m/AFm} Rt3={AFnomM*130.10m/AFm} Ct1={AFm*1.10m/AFnomM} Ct2={AFm*17.05m/AFnomM} Ct3={AFm*180.05m/AFnomM} SchRt1={AFnomS*4.85m/AFs} SchRt2={AFnomS*41.06m/AFs} SchRt3={AFnomS*130.10m/AFs} SchCt1={AFs*1.10m/AFnomS} SchCt2={AFs*17.05m/AFnomS} SchCt3={AFs*180.05m/AFnomS}
+ 
+*** Behavior Optimization *** 
+ 
+.param lvl = if(Schottky,min(level,2),level)
+.param SchT = {if(level-1,1,0)*Thermals*Schottky}
+.param LmflagQ1 = {if(LcsiQ1+0.5,7,6)}
+.param LmflagQ2 = {if(LcsiQ2+0.5,7,6)}
+.param SchottkyD = {-5*(Schottky-1) + Schottky*SchSub}
+.param RgiPerDie = {PackageRgi+DieRgi}
+.param Rgi = {Rgis*RgiPerDie/AFm}
+ 
+*** Module Subcircuit Call *** 
+ 
+X1 V+ Mid V- G1 K1 G2 K2 Tc1 Tc2 TjQ1 TjQ2 TjD1 TjD2 Baseplate Module_HalfBridge PARAMS: BPC = {BPC+1} Thermal = {Thermals+3} SchottkyThermal={SchT+3} Schottky={SchottkyD} Rdss={Rdss} Vths={Vths} AFm={AFm} Afs={AFs} Rp={Rp} Tj={Tj} CgdOffset={CgdOffset} die={die+lvl} Ld={Ld} Lp={Lp} Ls={Ls} LcsiQ1={LcsiQ1} LcsiQ2={LcsiQ2} LmflagQ1={LmflagQ1} LmflagQ2={LmflagQ2} Rdesr={Rdesr} Rpesr={Rpesr} Rsesr={Rsesr} Rgi={Rgi} LgQ1={LgQ1} LgQ2={LgQ2} Cug={Cug} Cag={Cag} Clg={Clg} Rt1={Rt1} Rt2={Rt2} Rt3={Rt3} Ct1={Ct1} Ct2={Ct2} Ct3={Ct3} SchRt1={SchRt1} SchRt2={SchRt2} SchRt3={SchRt3} SchCt1={SchCt1} SchCt2={SchCt2} SchCt3={SchCt3} agd={agd} ads={ads} ags={ags} tm1={tm1} tm2={tm2} tau1={tau1} tau2={tau2} dummy=1m
+
+.ENDS CAB008A12GM3
+
+ 
+.SUBCKT CAB006M12GM3 V+ Mid V- G1 K1 G2 K2 Tc1 Tc2 TjQ1 TjQ2 TjD1 TjD2 Baseplate
+ 
+*** Default Parameters *** 
+ 
+.param BPC=0 Thermals=1 level=3 Vths=0 Rdss=0 Rp=100 Tj={TEMP} SchSub=101 Schottky=0 AFm=6 AFs=1 AFnomM=6 AFnomS=1 die=60 Ld=3.55n Lp=5.00n Ls=3.55n Rdesr=980.00u Rpesr=250.00u Rsesr=900.00u PackageRgi=3.35 DieRgi=1.70 LgQ1=12.50n LgQ2=12.50n Cug=81.30p Cag=221.30p LcsiQ1=0.00 LcsiQ2=0.00 CgdOffset=3.52p agd=1.33 ags=622.62m ads=998.79m tau1=1.00 tau2=41.18 tm1=50.00 tm2=1.15 Rgis=1.86 Clg=119.40p Rt1={AFnomM*3.11m/AFm} Rt2={AFnomM*28.45m/AFm} Rt3={AFnomM*201.73m/AFm} Ct1={AFm*1.20m/AFnomM} Ct2={AFm*28.80m/AFnomM} Ct3={AFm*252.37m/AFnomM} SchRt1={AFnomS*3.11m/AFs} SchRt2={AFnomS*28.45m/AFs} SchRt3={AFnomS*201.73m/AFs} SchCt1={AFs*1.20m/AFnomS} SchCt2={AFs*28.80m/AFnomS} SchCt3={AFs*252.37m/AFnomS}
+ 
+*** Behavior Optimization *** 
+ 
+.param lvl = if(Schottky,min(level,2),level)
+.param SchT = {if(level-1,1,0)*Thermals*Schottky}
+.param LmflagQ1 = {if(LcsiQ1+0.5,7,6)}
+.param LmflagQ2 = {if(LcsiQ2+0.5,7,6)}
+.param SchottkyD = {-5*(Schottky-1) + Schottky*SchSub}
+.param RgiPerDie = {PackageRgi+DieRgi}
+.param Rgi = {Rgis*RgiPerDie/AFm}
+ 
+*** Module Subcircuit Call *** 
+ 
+X1 V+ Mid V- G1 K1 G2 K2 Tc1 Tc2 TjQ1 TjQ2 TjD1 TjD2 Baseplate Module_HalfBridge PARAMS: BPC = {BPC+1} Thermal = {Thermals+3} SchottkyThermal={SchT+3} Schottky={SchottkyD} Rdss={Rdss} Vths={Vths} AFm={AFm} Afs={AFs} Rp={Rp} Tj={Tj} CgdOffset={CgdOffset} die={die+lvl} Ld={Ld} Lp={Lp} Ls={Ls} LcsiQ1={LcsiQ1} LcsiQ2={LcsiQ2} LmflagQ1={LmflagQ1} LmflagQ2={LmflagQ2} Rdesr={Rdesr} Rpesr={Rpesr} Rsesr={Rsesr} Rgi={Rgi} LgQ1={LgQ1} LgQ2={LgQ2} Cug={Cug} Cag={Cag} Clg={Clg} Rt1={Rt1} Rt2={Rt2} Rt3={Rt3} Ct1={Ct1} Ct2={Ct2} Ct3={Ct3} SchRt1={SchRt1} SchRt2={SchRt2} SchRt3={SchRt3} SchCt1={SchCt1} SchCt2={SchCt2} SchCt3={SchCt3} agd={agd} ads={ads} ags={ags} tm1={tm1} tm2={tm2} tau1={tau1} tau2={tau2} dummy=1m
+
+.ENDS CAB006M12GM3
+
+ 
+.SUBCKT CAB006A12GM3 V+ Mid V- G1 K1 G2 K2 Tc1 Tc2 TjQ1 TjQ2 TjD1 TjD2 Baseplate
+ 
+*** Default Parameters *** 
+ 
+.param BPC=0 Thermals=1 level=3 Vths=0 Rdss=0 Rp=100 Tj={TEMP} SchSub=101 Schottky=0 AFm=6 AFs=1 AFnomM=6 AFnomS=1 die=60 Ld=3.55n Lp=5.00n Ls=3.55n Rdesr=980.00u Rpesr=250.00u Rsesr=900.00u PackageRgi=3.35 DieRgi=1.70 LgQ1=12.50n LgQ2=12.50n Cug=44.50p Cag=123.20p LcsiQ1=0.00 LcsiQ2=0.00 CgdOffset=1.48p agd=1.48 ags=623.85m ads=999.90m tau1=1.00 tau2=39.04 tm1=50.00 tm2=3.66 Rgis=1.91 Clg=67.60p Rt1={AFnomM*3.12m/AFm} Rt2={AFnomM*28.17m/AFm} Rt3={AFnomM*100.01m/AFm} Ct1={AFm*1.64m/AFnomM} Ct2={AFm*30.27m/AFnomM} Ct3={AFm*360.45m/AFnomM} SchRt1={AFnomS*3.12m/AFs} SchRt2={AFnomS*28.17m/AFs} SchRt3={AFnomS*100.01m/AFs} SchCt1={AFs*1.64m/AFnomS} SchCt2={AFs*30.27m/AFnomS} SchCt3={AFs*360.45m/AFnomS}
+ 
+*** Behavior Optimization *** 
+ 
+.param lvl = if(Schottky,min(level,2),level)
+.param SchT = {if(level-1,1,0)*Thermals*Schottky}
+.param LmflagQ1 = {if(LcsiQ1+0.5,7,6)}
+.param LmflagQ2 = {if(LcsiQ2+0.5,7,6)}
+.param SchottkyD = {-5*(Schottky-1) + Schottky*SchSub}
+.param RgiPerDie = {PackageRgi+DieRgi}
+.param Rgi = {Rgis*RgiPerDie/AFm}
+ 
+*** Module Subcircuit Call *** 
+ 
+X1 V+ Mid V- G1 K1 G2 K2 Tc1 Tc2 TjQ1 TjQ2 TjD1 TjD2 Baseplate Module_HalfBridge PARAMS: BPC = {BPC+1} Thermal = {Thermals+3} SchottkyThermal={SchT+3} Schottky={SchottkyD} Rdss={Rdss} Vths={Vths} AFm={AFm} Afs={AFs} Rp={Rp} Tj={Tj} CgdOffset={CgdOffset} die={die+lvl} Ld={Ld} Lp={Lp} Ls={Ls} LcsiQ1={LcsiQ1} LcsiQ2={LcsiQ2} LmflagQ1={LmflagQ1} LmflagQ2={LmflagQ2} Rdesr={Rdesr} Rpesr={Rpesr} Rsesr={Rsesr} Rgi={Rgi} LgQ1={LgQ1} LgQ2={LgQ2} Cug={Cug} Cag={Cag} Clg={Clg} Rt1={Rt1} Rt2={Rt2} Rt3={Rt3} Ct1={Ct1} Ct2={Ct2} Ct3={Ct3} SchRt1={SchRt1} SchRt2={SchRt2} SchRt3={SchRt3} SchCt1={SchCt1} SchCt2={SchCt2} SchCt3={SchCt3} agd={agd} ads={ads} ags={ags} tm1={tm1} tm2={tm2} tau1={tau1} tau2={tau2} dummy=1m
+
+.ENDS CAB006A12GM3
+
+ 
+.SUBCKT CAB011A12GM3 V+ Mid V- G1 K1 G2 K2 Tc1 Tc2 TjQ1 TjQ2 TjD1 TjD2 Baseplate
+ 
+*** Default Parameters *** 
+ 
+.param BPC=0 Thermals=1 level=3 Vths=0 Rdss=0 Rp=100 Tj={TEMP} SchSub=101 Schottky=0 AFm=3 AFs=1 AFnomM=3 AFnomS=1 die=60 Ld=3.55n Lp=5.00n Ls=3.55n Rdesr=980.00u Rpesr=250.00u Rsesr=900.00u PackageRgi=3.00 DieRgi=1.70 LgQ1=12.50n LgQ2=12.50n Cug=44.50p Cag=123.20p LcsiQ1=0.00 LcsiQ2=0.00 CgdOffset=7.16p agd=1.18 ags=712.26m ads=998.53m tau1=1.00 tau2=49.27 tm1=50.00 tm2=2.22 Rgis=1.66 Clg=67.60p Rt1={AFnomM*6.21m/AFm} Rt2={AFnomM*52.09m/AFm} Rt3={AFnomM*153.64m/AFm} Ct1={AFm*899.60u/AFnomM} Ct2={AFm*13.41m/AFnomM} Ct3={AFm*134.92m/AFnomM} SchRt1={AFnomS*6.21m/AFs} SchRt2={AFnomS*52.09m/AFs} SchRt3={AFnomS*153.64m/AFs} SchCt1={AFs*899.60u/AFnomS} SchCt2={AFs*13.41m/AFnomS} SchCt3={AFs*134.92m/AFnomS}
+ 
+*** Behavior Optimization *** 
+ 
+.param lvl = if(Schottky,min(level,2),level)
+.param SchT = {if(level-1,1,0)*Thermals*Schottky}
+.param LmflagQ1 = {if(LcsiQ1+0.5,7,6)}
+.param LmflagQ2 = {if(LcsiQ2+0.5,7,6)}
+.param SchottkyD = {-5*(Schottky-1) + Schottky*SchSub}
+.param RgiPerDie = {PackageRgi+DieRgi}
+.param Rgi = {Rgis*RgiPerDie/AFm}
+ 
+*** Module Subcircuit Call *** 
+ 
+X1 V+ Mid V- G1 K1 G2 K2 Tc1 Tc2 TjQ1 TjQ2 TjD1 TjD2 Baseplate Module_HalfBridge PARAMS: BPC = {BPC+1} Thermal = {Thermals+3} SchottkyThermal={SchT+3} Schottky={SchottkyD} Rdss={Rdss} Vths={Vths} AFm={AFm} Afs={AFs} Rp={Rp} Tj={Tj} CgdOffset={CgdOffset} die={die+lvl} Ld={Ld} Lp={Lp} Ls={Ls} LcsiQ1={LcsiQ1} LcsiQ2={LcsiQ2} LmflagQ1={LmflagQ1} LmflagQ2={LmflagQ2} Rdesr={Rdesr} Rpesr={Rpesr} Rsesr={Rsesr} Rgi={Rgi} LgQ1={LgQ1} LgQ2={LgQ2} Cug={Cug} Cag={Cag} Clg={Clg} Rt1={Rt1} Rt2={Rt2} Rt3={Rt3} Ct1={Ct1} Ct2={Ct2} Ct3={Ct3} SchRt1={SchRt1} SchRt2={SchRt2} SchRt3={SchRt3} SchCt1={SchCt1} SchCt2={SchCt2} SchCt3={SchCt3} agd={agd} ads={ads} ags={ags} tm1={tm1} tm2={tm2} tau1={tau1} tau2={tau2} dummy=1m
+
+.ENDS CAB011A12GM3
+
+ 
+.SUBCKT CAB003M09DM3 V+ Mid V- G1 K1 G2 K2 Tc1 Tc2 TjQ1 TjQ2 TjD1 TjD2 Baseplate
+ 
+*** Default Parameters *** 
+ 
+.param BPC=0 Thermals=1 level=3 Vths=0 Rdss=0 Rp=100 Tj={TEMP} SchSub=101 Schottky=0 AFm=4 AFs=1 AFnomM=4 AFnomS=1 die=70 Ld=6.04n Lp=9.76n Ls=5.46n Rdesr=410.00u Rpesr=250.00u Rsesr=560.00u PackageRgi=0.00 DieRgi=2.50 LgQ1=10.10n LgQ2=9.45n Cug=78.60p Cag=106.55p LcsiQ1=0.00 LcsiQ2=0.00 CgdOffset=-4.49p agd=1.44 ags=931.40m ads=999.82m tau1=1.00 tau2=28.17 tm1=50.00 tm2=5.79 Rgis=1.03 Clg=71.63p Rt1={AFnomM*2.01m/AFm} Rt2={AFnomM*19.89m/AFm} Rt3={AFnomM*106.59m/AFm} Ct1={AFm*1.36m/AFnomM} Ct2={AFm*48.66m/AFnomM} Ct3={AFm*373.10m/AFnomM} SchRt1={AFnomS*2.01m/AFs} SchRt2={AFnomS*19.89m/AFs} SchRt3={AFnomS*106.59m/AFs} SchCt1={AFs*1.36m/AFnomS} SchCt2={AFs*48.66m/AFnomS} SchCt3={AFs*373.10m/AFnomS}
+ 
+*** Behavior Optimization *** 
+ 
+.param lvl = if(Schottky,min(level,2),level)
+.param SchT = {if(level-1,1,0)*Thermals*Schottky}
+.param LmflagQ1 = {if(LcsiQ1+0.5,7,6)}
+.param LmflagQ2 = {if(LcsiQ2+0.5,7,6)}
+.param SchottkyD = {-5*(Schottky-1) + Schottky*SchSub}
+.param RgiPerDie = {PackageRgi+DieRgi}
+.param Rgi = {Rgis*RgiPerDie/AFm}
+ 
+*** Module Subcircuit Call *** 
+ 
+X1 V+ Mid V- G1 K1 G2 K2 Tc1 Tc2 TjQ1 TjQ2 TjD1 TjD2 Baseplate Module_HalfBridge PARAMS: BPC = {BPC+1} Thermal = {Thermals+3} SchottkyThermal={SchT+3} Schottky={SchottkyD} Rdss={Rdss} Vths={Vths} AFm={AFm} Afs={AFs} Rp={Rp} Tj={Tj} CgdOffset={CgdOffset} die={die+lvl} Ld={Ld} Lp={Lp} Ls={Ls} LcsiQ1={LcsiQ1} LcsiQ2={LcsiQ2} LmflagQ1={LmflagQ1} LmflagQ2={LmflagQ2} Rdesr={Rdesr} Rpesr={Rpesr} Rsesr={Rsesr} Rgi={Rgi} LgQ1={LgQ1} LgQ2={LgQ2} Cug={Cug} Cag={Cag} Clg={Clg} Rt1={Rt1} Rt2={Rt2} Rt3={Rt3} Ct1={Ct1} Ct2={Ct2} Ct3={Ct3} SchRt1={SchRt1} SchRt2={SchRt2} SchRt3={SchRt3} SchCt1={SchCt1} SchCt2={SchCt2} SchCt3={SchCt3} agd={agd} ads={ads} ags={ags} tm1={tm1} tm2={tm2} tau1={tau1} tau2={tau2} dummy=1m
+
+.ENDS CAB003M09DM3
+
+
+
+**********************************************************************
+********************* SiC MOSFET Models ******************************
+**********************************************************************
+.SUBCKT 11 D G S Tj Id
+*** Forward Conduction Model ***
+Gds D s2 Value {V(Fwd)}
+Eds Fwd 0 Value {AF*IdFwd(V(D,s2),V(G,S)+Vths+VthFwd(V(Tj)))}
+GRds s2 S Value {V(s2,S)/((Rdss + RTJ(V(Tj)))/AF)}
+R1 s2 S 1k
+Rbypass D S 1G
+
+.func IdFwd(Vds,Vgs) {a(Vgs)*atan(b(Vgs)*max(Vds,0)) + c(Vgs)*Vds + b(Vgs)*a(Vgs)*min(Vds,0)}
+
+ECurr Id 0 Value {abs(I(Rbd)) + abs(V(Fwd))}
+DBD S d2 IdealDiode
+Rbd d2 D {Rs_ideal/(2*AF)}
+.model IdealDiode D(level=1 Is={AF*Is_ideal} N={n_ideal/((TEMP+273.15)*(0.026/(27+273.15)))} Rs={Rs_ideal/(2*AF)} Tnom={TEMP})
+*** CV Model ***
+
+G_cdg    D    G    Value {(AF*(agd*1e-9*Cdg(V(D,G))+{Cgd_Module}))*ddt(V(D,G))}
+G_cds    d2   S    Value {AF*ads*1e-9*Cds(V(d2,S))*ddt(V(d2,S))}
+G_cgs    G    S    Value {AF*ags*1e-9*Cgs(V(G,S))*ddt(V(G,S))}
+
+**********************************************************************
+********************** Models and Parameters ***********************
+**********************************************************************
+
+
+
+*** Forward Conduction Parameters ***
+.func a(Vgs) {table(Vgs,0,8.3333e-10,0.5,2.1818e-08,1,5.7125e-07,1.5,1.4957e-05,2,0.0003916,2.5,0.010253,3,0.26844,3.5,0.73703,4,1.6869,4.5,3.4064,5,6.2214,5.5,10.4687,6,16.4614,6.5,24.5962,7,35.2151,7.5,48.4783,8,64.5935,8.5,83.7514,9,106.5269,9.5,131.1492,10,156.8332,10.5,181.9994,11,203.6325,11.5,223.4501,12,238.5519,12.5,251.7778,13,263.331,13.5,273.355,14,280.1431,14.5,288.0951,15,295.2182,15.5,302.0629,16,310.9616,16.5,320.7217,17,330.5798,17.5,340.4769,18,349.4257)}
+.func b(Vgs) {table(Vgs,0,1,0.5,1,1,1,1.5,1,2,1,2.5,1,3,1,3.5,1,4,1,4.5,0.96423,5,0.91031,5.5,0.84185,6,0.76111,6.5,0.66759,7,0.59765,7.5,0.53736,8,0.4829,8.5,0.43287,9,0.38545,9.5,0.3496,10,0.32201,10.5,0.30331,11,0.29551,11.5,0.29502,12,0.30149,12.5,0.30877,13,0.31705,13.5,0.32918,14,0.3473,14.5,0.35908,15,0.3703,15.5,0.38033,16,0.38347,16.5,0.38347,17,0.38347,17.5,0.38347,18,0.38347)}
+.func c(Vgs) {table(Vgs,0,0,0.5,0,1,0,1.5,0,2,6e-05,2.5,0.00021227,3,0.00057773,3.5,0.0013014,4,0.0027809,4.5,0.0052597,5,0.009114,5.5,0.014853,6,0.023873,6.5,0.03639,7,0.052546,7.5,0.072506,8,0.096603,8.5,0.12404,9,0.15091,9.5,0.19086,10,0.27377,10.5,0.47311,11,0.95562,11.5,1.5538,12,2.2957,12.5,3.0261,13,3.6762,13.5,4.0442,14,4.3019,14.5,4.398,15,4.4574,15.5,4.4745,16,4.4834,16.5,4.4834,17,4.4834,17.5,4.4834,18,4.4834)}
+.func RTJ(Tj) {table(Tj,25,0.0076941,50,0.010235,75,0.013405,100,0.018386,125,0.021291,150,0.025815,175,0.031587)}
+.func VthFwd(Tj) {table(Tj,25,-0.76492,50,-0.55501,75,-0.34196,100,0,125,0.043912,150,0.20306,175,0.39548)}
+
+
+*** Reverse Conduction Parameters ***
+.param Is=10.00m
+.func RdBD(Tj) {table(Tj,25,-0.0021069,50,-0.0035291,75,-0.0038975,100,0,125,0.00010587,150,0.0050556,175,0.012379)}
+.func VthBD(Tj) {table(Tj,25,-0.27431,50,-0.23952,75,-0.1985,100,0,125,0.19333,150,0.57932,175,1.1375)}
+
+*** Device Capacitance Values ***
+.func Cds(V) {table(V,0.010,5.112,0.015,5.122,0.022,5.106,0.033,5.102,0.050,5.093,0.075,5.063,0.111,5.041,0.167,4.984,0.249,4.925,0.372,4.835,0.556,4.713,0.831,4.564,1.242,4.352,1.856,4.100,2.774,3.794,4.146,3.448,6.196,3.073,9.260,2.666,13.840,2.025,20.684,1.716,30.913,1.443,46.200,1.064,69.048,0.743,103.195,0.563,154.228,0.442,230.500,0.353,344.491,0.285,514.854,0.232,769.469,0.190,1150.000,0.177)}
+
+.func Cdg(V) {table(V,0.010,2.499,0.015,2.482,0.022,2.480,0.033,2.452,0.050,2.417,0.075,2.379,0.111,2.307,0.167,2.217,0.249,2.078,0.372,1.896,0.556,1.689,0.831,1.486,1.242,1.308,1.856,1.110,2.774,0.921,4.146,0.742,6.196,0.574,9.260,0.398,13.840,0.095,20.684,0.075,30.913,0.063,46.200,0.049,69.048,0.033,103.195,0.026,154.228,0.021,230.500,0.017,344.491,0.015,514.854,0.012,769.469,0.010,1150.000,0.010)}
+
+.func Cgs(V) {table(V,-5.000,8.066,-4.750,7.372,-4.500,6.750,-4.250,6.307,-4.000,6.078,-3.750,6.032,-3.500,6.037,-3.250,6.050,-3.000,6.068,-2.750,6.095,-2.500,6.129,-2.250,6.168,-2.000,6.220,-1.750,6.282,-1.500,6.349,-1.250,6.424,-1.000,6.528,-0.750,6.701,-0.500,6.992,-0.250,7.378,0.000,7.753,0.250,8.084,0.500,8.366,0.750,8.631,1.000,8.860,1.250,9.094,1.500,9.299,1.750,9.470,2.000,9.609,2.250,9.707,2.500,9.784,2.750,9.842,3.000,9.890,3.250,9.926,3.500,9.955,3.750,9.980,4.000,10.004,4.250,10.022,4.500,10.037,4.750,10.052,5.000,10.066,6.000,10.110,7.000,10.143,8.000,10.171,9.000,10.195,10.000,10.215,11.000,10.234,12.000,10.251,13.000,10.267,14.000,10.281,15.000,10.294)}
+
+
+.param Is_ideal=1.000000e-02
+.param n_ideal=5.448123e-01
+.param Rs_ideal=1.573994e-02
+.ENDS 11
+
+.SUBCKT 12 D G S Tj Id
+*** Forward Conduction Model ***
+Gds D s2 Value {V(Fwd)}
+Eds Fwd 0 Value {AF*IdFwd(V(D,s2),V(G,S)+Vths+VthFwd(V(Tj)))}
+GRds s2 S Value {V(s2,S)/((Rdss + RTJ(V(Tj)))/AF)}
+R1 s2 S 1k
+Rbypass D S 1G
+
+.func IdFwd(Vds,Vgs) {a(Vgs)*atan(b(Vgs)*max(Vds,0)) + c(Vgs)*Vds + b(Vgs)*a(Vgs)*min(Vds,0)}
+
+ECurr Id 0 Value {abs(V(Rev)) + abs(V(Fwd))}
+*** Third Quadrant [Without RR] ***
+GRbd D d2 Value {V(D,d2)/((RdBD(V(Tj))+Rs(V(G,S)+VthBD(V(Tj))))/(AF))}
+R2 D d2 1k
+GTQ S d2 Value {V(Rev)}
+ETQ Rev 0 Value {AF*min(Is*(-1+exp(max(V(S,d2),-1n)/(nn(V(G,S)+VthBD(V(Tj)))))),1e6)}
+
+*** CV Model ***
+
+G_cdg    D    G    Value {(AF*(agd*1e-9*Cdg(V(D,G))+{Cgd_Module}))*ddt(V(D,G))}
+G_cds    d2   S    Value {AF*ads*1e-9*Cds(V(d2,S))*ddt(V(d2,S))}
+G_cgs    G    S    Value {AF*ags*1e-9*Cgs(V(G,S))*ddt(V(G,S))}
+
+**********************************************************************
+********************** Models and Parameters ***********************
+**********************************************************************
+
+
+
+*** Forward Conduction Parameters ***
+.func a(Vgs) {table(Vgs,0,8.3333e-10,0.5,2.1818e-08,1,5.7125e-07,1.5,1.4957e-05,2,0.0003916,2.5,0.010253,3,0.26844,3.5,0.73703,4,1.6869,4.5,3.4064,5,6.2214,5.5,10.4687,6,16.4614,6.5,24.5962,7,35.2151,7.5,48.4783,8,64.5935,8.5,83.7514,9,106.5269,9.5,131.1492,10,156.8332,10.5,181.9994,11,203.6325,11.5,223.4501,12,238.5519,12.5,251.7778,13,263.331,13.5,273.355,14,280.1431,14.5,288.0951,15,295.2182,15.5,302.0629,16,310.9616,16.5,320.7217,17,330.5798,17.5,340.4769,18,349.4257)}
+.func b(Vgs) {table(Vgs,0,1,0.5,1,1,1,1.5,1,2,1,2.5,1,3,1,3.5,1,4,1,4.5,0.96423,5,0.91031,5.5,0.84185,6,0.76111,6.5,0.66759,7,0.59765,7.5,0.53736,8,0.4829,8.5,0.43287,9,0.38545,9.5,0.3496,10,0.32201,10.5,0.30331,11,0.29551,11.5,0.29502,12,0.30149,12.5,0.30877,13,0.31705,13.5,0.32918,14,0.3473,14.5,0.35908,15,0.3703,15.5,0.38033,16,0.38347,16.5,0.38347,17,0.38347,17.5,0.38347,18,0.38347)}
+.func c(Vgs) {table(Vgs,0,0,0.5,0,1,0,1.5,0,2,6e-05,2.5,0.00021227,3,0.00057773,3.5,0.0013014,4,0.0027809,4.5,0.0052597,5,0.009114,5.5,0.014853,6,0.023873,6.5,0.03639,7,0.052546,7.5,0.072506,8,0.096603,8.5,0.12404,9,0.15091,9.5,0.19086,10,0.27377,10.5,0.47311,11,0.95562,11.5,1.5538,12,2.2957,12.5,3.0261,13,3.6762,13.5,4.0442,14,4.3019,14.5,4.398,15,4.4574,15.5,4.4745,16,4.4834,16.5,4.4834,17,4.4834,17.5,4.4834,18,4.4834)}
+.func RTJ(Tj) {table(Tj,25,0.0076941,50,0.010235,75,0.013405,100,0.018386,125,0.021291,150,0.025815,175,0.031587)}
+.func VthFwd(Tj) {table(Tj,25,-0.76492,50,-0.55501,75,-0.34196,100,0,125,0.043912,150,0.20306,175,0.39548)}
+
+
+*** Reverse Conduction Parameters ***
+.func nn(Vgs) {table(Vgs,-5,0.54481,-4,0.51251,-3,0.47138,-2,0.42033,-1,0.36135,0,0.30119,1,0.24669,2,0.19856,3,0.15711,4,0.12608,5,0.10843,6,0.10034,7,0.1,8,0.1,9,0.1,10,0.1,11,0.1,12,0.1,13,0.1,14,0.2301,15,0.44619,16,0.73689,17,1.0564,18,1.3493)}
+.func Rs(Vgs) {table(Vgs,-5,0.01574,-4,0.016912,-3,0.018816,-2,0.021455,-1,0.024567,0,0.027492,1,0.02956,2,0.030904,3,0.031959,4,0.033847,5,0.038309,6,0.047074,7,0.059494,8,0.079227,9,0.10352,10,0.13295,11,0.18066,12,0.30336,13,0.62079,14,2.1778,15,6.4528,16,16.0758,17,33.6765,18,59.7322)}
+.param Is=10.00m
+.func RdBD(Tj) {table(Tj,25,-0.0021069,50,-0.0035291,75,-0.0038975,100,0,125,0.00010587,150,0.0050556,175,0.012379)}
+.func VthBD(Tj) {table(Tj,25,-0.27431,50,-0.23952,75,-0.1985,100,0,125,0.19333,150,0.57932,175,1.1375)}
+
+*** Device Capacitance Values ***
+.func Cds(V) {table(V,0.010,5.112,0.015,5.122,0.022,5.106,0.033,5.102,0.050,5.093,0.075,5.063,0.111,5.041,0.167,4.984,0.249,4.925,0.372,4.835,0.556,4.713,0.831,4.564,1.242,4.352,1.856,4.100,2.774,3.794,4.146,3.448,6.196,3.073,9.260,2.666,13.840,2.025,20.684,1.716,30.913,1.443,46.200,1.064,69.048,0.743,103.195,0.563,154.228,0.442,230.500,0.353,344.491,0.285,514.854,0.232,769.469,0.190,1150.000,0.177)}
+
+.func Cdg(V) {table(V,0.010,2.499,0.015,2.482,0.022,2.480,0.033,2.452,0.050,2.417,0.075,2.379,0.111,2.307,0.167,2.217,0.249,2.078,0.372,1.896,0.556,1.689,0.831,1.486,1.242,1.308,1.856,1.110,2.774,0.921,4.146,0.742,6.196,0.574,9.260,0.398,13.840,0.095,20.684,0.075,30.913,0.063,46.200,0.049,69.048,0.033,103.195,0.026,154.228,0.021,230.500,0.017,344.491,0.015,514.854,0.012,769.469,0.010,1150.000,0.010)}
+
+.func Cgs(V) {table(V,-5.000,8.066,-4.750,7.372,-4.500,6.750,-4.250,6.307,-4.000,6.078,-3.750,6.032,-3.500,6.037,-3.250,6.050,-3.000,6.068,-2.750,6.095,-2.500,6.129,-2.250,6.168,-2.000,6.220,-1.750,6.282,-1.500,6.349,-1.250,6.424,-1.000,6.528,-0.750,6.701,-0.500,6.992,-0.250,7.378,0.000,7.753,0.250,8.084,0.500,8.366,0.750,8.631,1.000,8.860,1.250,9.094,1.500,9.299,1.750,9.470,2.000,9.609,2.250,9.707,2.500,9.784,2.750,9.842,3.000,9.890,3.250,9.926,3.500,9.955,3.750,9.980,4.000,10.004,4.250,10.022,4.500,10.037,4.750,10.052,5.000,10.066,6.000,10.110,7.000,10.143,8.000,10.171,9.000,10.195,10.000,10.215,11.000,10.234,12.000,10.251,13.000,10.267,14.000,10.281,15.000,10.294)}
+
+
+.ENDS 12
+
+.SUBCKT 13 D G S Tj Id
+*** Forward Conduction Model ***
+Gds D s2 Value {V(Fwd)}
+Eds Fwd 0 Value {AF*IdFwd(V(D,s2),V(G,S)+Vths+VthFwd(V(Tj)))}
+GRds s2 S Value {V(s2,S)/((Rdss + RTJ(V(Tj)))/AF)}
+R1 s2 S 1k
+Rbypass D S 1G
+
+.func IdFwd(Vds,Vgs) {a(Vgs)*atan(b(Vgs)*max(Vds,0)) + c(Vgs)*Vds + b(Vgs)*a(Vgs)*min(Vds,0)}
+
+ECurr Id 0 Value {abs(V(Rev)) + abs(V(Fwd))}
+*** Third Quadrant [With RR] ***
+GRbd D d2 Value {V(D,d2)/((RdBD(V(Tj))+Rs(V(G,S)+VthBD(V(Tj))))/(AF))}
+R2 D d2 1k
+GI1 0 qm Value {-1/tau(V(Tj))*V(qm)+V(qe,qm)/TM(V(Tj))}
+EV1 qe 0 Value {min((1+TM(V(Tj))/tau(V(Tj)))*Is*tau(V(Tj))*(-1+exp(max(V(S,d2),-1n)/(nn(V(G,S)+VthBD(V(Tj)))))),1e6)}
+GITQ S d2 Value {V(Rev)}
+EITQ Rev 0 Value {AF*V(qe,qm)/TM(V(Tj))}
+C1 qm 0 1
+R3 qm 0 100G
+.func tau(Tj) {1e-9*table(Tj,25,tau1,175,tau2)}
+.func TM(Tj) {1e-9*table(Tj,25,tm1,175,tm2)}
+
+*** CV Model ***
+
+G_cdg    D    G    Value {(AF*(agd*1e-9*Cdg(V(D,G))+{Cgd_Module}))*ddt(V(D,G))}
+G_cds    d2   S    Value {AF*ads*1e-9*Cds(V(d2,S))*ddt(V(d2,S))}
+G_cgs    G    S    Value {AF*ags*1e-9*Cgs(V(G,S))*ddt(V(G,S))}
+
+**********************************************************************
+********************** Models and Parameters ***********************
+**********************************************************************
+
+
+
+*** Forward Conduction Parameters ***
+.func a(Vgs) {table(Vgs,0,8.3333e-10,0.5,2.1818e-08,1,5.7125e-07,1.5,1.4957e-05,2,0.0003916,2.5,0.010253,3,0.26844,3.5,0.73703,4,1.6869,4.5,3.4064,5,6.2214,5.5,10.4687,6,16.4614,6.5,24.5962,7,35.2151,7.5,48.4783,8,64.5935,8.5,83.7514,9,106.5269,9.5,131.1492,10,156.8332,10.5,181.9994,11,203.6325,11.5,223.4501,12,238.5519,12.5,251.7778,13,263.331,13.5,273.355,14,280.1431,14.5,288.0951,15,295.2182,15.5,302.0629,16,310.9616,16.5,320.7217,17,330.5798,17.5,340.4769,18,349.4257)}
+.func b(Vgs) {table(Vgs,0,1,0.5,1,1,1,1.5,1,2,1,2.5,1,3,1,3.5,1,4,1,4.5,0.96423,5,0.91031,5.5,0.84185,6,0.76111,6.5,0.66759,7,0.59765,7.5,0.53736,8,0.4829,8.5,0.43287,9,0.38545,9.5,0.3496,10,0.32201,10.5,0.30331,11,0.29551,11.5,0.29502,12,0.30149,12.5,0.30877,13,0.31705,13.5,0.32918,14,0.3473,14.5,0.35908,15,0.3703,15.5,0.38033,16,0.38347,16.5,0.38347,17,0.38347,17.5,0.38347,18,0.38347)}
+.func c(Vgs) {table(Vgs,0,0,0.5,0,1,0,1.5,0,2,6e-05,2.5,0.00021227,3,0.00057773,3.5,0.0013014,4,0.0027809,4.5,0.0052597,5,0.009114,5.5,0.014853,6,0.023873,6.5,0.03639,7,0.052546,7.5,0.072506,8,0.096603,8.5,0.12404,9,0.15091,9.5,0.19086,10,0.27377,10.5,0.47311,11,0.95562,11.5,1.5538,12,2.2957,12.5,3.0261,13,3.6762,13.5,4.0442,14,4.3019,14.5,4.398,15,4.4574,15.5,4.4745,16,4.4834,16.5,4.4834,17,4.4834,17.5,4.4834,18,4.4834)}
+.func RTJ(Tj) {table(Tj,25,0.0076941,50,0.010235,75,0.013405,100,0.018386,125,0.021291,150,0.025815,175,0.031587)}
+.func VthFwd(Tj) {table(Tj,25,-0.76492,50,-0.55501,75,-0.34196,100,0,125,0.043912,150,0.20306,175,0.39548)}
+
+
+*** Reverse Conduction Parameters ***
+.func nn(Vgs) {table(Vgs,-5,0.54481,-4,0.51251,-3,0.47138,-2,0.42033,-1,0.36135,0,0.30119,1,0.24669,2,0.19856,3,0.15711,4,0.12608,5,0.10843,6,0.10034,7,0.1,8,0.1,9,0.1,10,0.1,11,0.1,12,0.1,13,0.1,14,0.2301,15,0.44619,16,0.73689,17,1.0564,18,1.3493)}
+.func Rs(Vgs) {table(Vgs,-5,0.01574,-4,0.016912,-3,0.018816,-2,0.021455,-1,0.024567,0,0.027492,1,0.02956,2,0.030904,3,0.031959,4,0.033847,5,0.038309,6,0.047074,7,0.059494,8,0.079227,9,0.10352,10,0.13295,11,0.18066,12,0.30336,13,0.62079,14,2.1778,15,6.4528,16,16.0758,17,33.6765,18,59.7322)}
+.param Is=10.00m
+.func RdBD(Tj) {table(Tj,25,-0.0021069,50,-0.0035291,75,-0.0038975,100,0,125,0.00010587,150,0.0050556,175,0.012379)}
+.func VthBD(Tj) {table(Tj,25,-0.27431,50,-0.23952,75,-0.1985,100,0,125,0.19333,150,0.57932,175,1.1375)}
+
+*** Device Capacitance Values ***
+.func Cds(V) {table(V,0.010,5.112,0.015,5.122,0.022,5.106,0.033,5.102,0.050,5.093,0.075,5.063,0.111,5.041,0.167,4.984,0.249,4.925,0.372,4.835,0.556,4.713,0.831,4.564,1.242,4.352,1.856,4.100,2.774,3.794,4.146,3.448,6.196,3.073,9.260,2.666,13.840,2.025,20.684,1.716,30.913,1.443,46.200,1.064,69.048,0.743,103.195,0.563,154.228,0.442,230.500,0.353,344.491,0.285,514.854,0.232,769.469,0.190,1150.000,0.177)}
+
+.func Cdg(V) {table(V,0.010,2.499,0.015,2.482,0.022,2.480,0.033,2.452,0.050,2.417,0.075,2.379,0.111,2.307,0.167,2.217,0.249,2.078,0.372,1.896,0.556,1.689,0.831,1.486,1.242,1.308,1.856,1.110,2.774,0.921,4.146,0.742,6.196,0.574,9.260,0.398,13.840,0.095,20.684,0.075,30.913,0.063,46.200,0.049,69.048,0.033,103.195,0.026,154.228,0.021,230.500,0.017,344.491,0.015,514.854,0.012,769.469,0.010,1150.000,0.010)}
+
+.func Cgs(V) {table(V,-5.000,8.066,-4.750,7.372,-4.500,6.750,-4.250,6.307,-4.000,6.078,-3.750,6.032,-3.500,6.037,-3.250,6.050,-3.000,6.068,-2.750,6.095,-2.500,6.129,-2.250,6.168,-2.000,6.220,-1.750,6.282,-1.500,6.349,-1.250,6.424,-1.000,6.528,-0.750,6.701,-0.500,6.992,-0.250,7.378,0.000,7.753,0.250,8.084,0.500,8.366,0.750,8.631,1.000,8.860,1.250,9.094,1.500,9.299,1.750,9.470,2.000,9.609,2.250,9.707,2.500,9.784,2.750,9.842,3.000,9.890,3.250,9.926,3.500,9.955,3.750,9.980,4.000,10.004,4.250,10.022,4.500,10.037,4.750,10.052,5.000,10.066,6.000,10.110,7.000,10.143,8.000,10.171,9.000,10.195,10.000,10.215,11.000,10.234,12.000,10.251,13.000,10.267,14.000,10.281,15.000,10.294)}
+
+
+.ENDS 13
+
+.SUBCKT 21 D G S Tj Id
+*** Forward Conduction Model ***
+Gds D s2 Value {V(Fwd)}
+Eds Fwd 0 Value {AF*IdFwd(V(D,s2),V(G,S)+Vths+VthFwd(V(Tj)))}
+GRds s2 S Value {V(s2,S)/((Rdss + RTJ(V(Tj)))/AF)}
+R1 s2 S 1k
+Rbypass D S 1G
+
+.func IdFwd(Vds,Vgs) {a(Vgs)*atan(b(Vgs)*max(Vds,0)) + c(Vgs)*Vds + b(Vgs)*a(Vgs)*min(Vds,0)}
+
+ECurr Id 0 Value {abs(I(Rbd)) + abs(V(Fwd))}
+DBD S d2 IdealDiode
+Rbd d2 D {Rs_ideal/(2*AF)}
+.model IdealDiode D(level=1 Is={AF*Is_ideal} N={n_ideal/((TEMP+273.15)*(0.026/(27+273.15)))} Rs={Rs_ideal/(2*AF)} Tnom={TEMP})
+*** CV Model ***
+
+G_cdg    D    G    Value {(AF*(agd*1e-9*Cdg(V(D,G))+{Cgd_Module}))*ddt(V(D,G))}
+G_cds    d2   S    Value {AF*ads*1e-9*Cds(V(d2,S))*ddt(V(d2,S))}
+G_cgs    G    S    Value {AF*ags*1e-9*Cgs(V(G,S))*ddt(V(G,S))}
+
+**********************************************************************
+********************** Models and Parameters ***********************
+**********************************************************************
+
+
+
+*** Forward Conduction Parameters ***
+.func a(Vgs) {table(Vgs,0,8.3333e-10,0.5,3.2912e-08,1,1.2999e-06,1.5,5.1337e-05,2,0.0020275,2.5,0.080077,3,0.26452,3.5,0.71473,4,1.6389,4.5,3.3376,5,6.0898,5.5,10.2882,6,16.2661,6.5,24.3611,7,34.6055,7.5,47.4174,8,62.6933,8.5,80.6968,9,101.0675,9.5,123.5675,10,147.7718,10.5,171.2769,11,190.0091,11.5,203.7739,12,212.6808,12.5,218.0873,13,221.6218,13.5,227.1394,14,234.3234,14.5,242.355,15,250.0825,15.5,257.8381,16,264.8008)}
+.func b(Vgs) {table(Vgs,0,1,0.5,1,1,1,1.5,1,2,1,2.5,1,3,1,3.5,1,4,0.9975,4.5,0.97964,5,0.94622,5.5,0.89362,6,0.82591,6.5,0.74735,7,0.67699,7.5,0.61032,8,0.5554,8.5,0.5061,9,0.45825,9.5,0.41621,10,0.37933,10.5,0.35168,11,0.33998,11.5,0.34857,12,0.36657,12.5,0.39223,13,0.41893,13.5,0.43971,14,0.45364,14.5,0.45951,15,0.46446,15.5,0.4681,16,0.4681)}
+.func c(Vgs) {table(Vgs,0,0,0.5,0,1,0,1.5,4.289e-21,2,3.9117e-05,2.5,0.00018305,3,0.0005664,3.5,0.0013804,4,0.0029383,4.5,0.0054905,5,0.0094785,5.5,0.01499,6,0.022754,6.5,0.033549,7,0.046351,7.5,0.061145,8,0.079045,8.5,0.1014,9,0.12631,9.5,0.16171,10,0.22546,10.5,0.37702,11,0.82475,11.5,1.5403,12,2.5028,12.5,3.5495,13,4.5817,13.5,5.3382,14,5.8376,14.5,6.0765,15,6.1994,15.5,6.2613,16,6.2613)}
+.func RTJ(Tj) {table(Tj,25,0.0072779,50,0.0087253,75,0.010142,100,0.014081,125,0.014563,150,0.017332,175,0.020618)}
+.func VthFwd(Tj) {table(Tj,25,-0.45002,50,-0.45002,75,-0.34589,100,0,125,0.018162,150,0.16655,175,0.31086)}
+
+
+*** Reverse Conduction Parameters ***
+.param Is=10.00m
+.func RdBD(Tj) {table(Tj,25,1.7632e-05,50,-0.00038363,75,-0.0007569,100,0,125,-0.00045418,150,0.0005986,175,0.0019148)}
+.func VthBD(Tj) {table(Tj,25,-1,50,-1,75,-1,100,0,125,-0.22731,150,0.56847,175,1.3054)}
+
+*** Device Capacitance Values ***
+.func Cds(V) {table(V,0.010,4.513,0.015,4.514,0.022,4.502,0.033,4.496,0.050,4.479,0.075,4.450,0.111,4.425,0.167,4.375,0.249,4.312,0.372,4.227,0.556,4.105,0.831,3.958,1.242,3.765,1.856,3.528,2.774,3.255,4.146,2.946,6.196,2.603,9.260,1.924,13.840,1.554,20.684,1.243,30.913,0.964,46.200,0.772,69.048,0.625,103.195,0.509,154.228,0.416,230.500,0.341,344.491,0.280,514.854,0.232,769.469,0.219,1150.000,0.216)}
+
+.func Cdg(V) {table(V,0.010,2.204,0.015,2.196,0.022,2.181,0.033,2.161,0.050,2.132,0.075,2.095,0.111,2.032,0.167,1.946,0.249,1.816,0.372,1.647,0.556,1.457,0.831,1.272,1.242,1.103,1.856,0.925,2.774,0.751,4.146,0.594,6.196,0.441,9.260,0.092,13.840,0.061,20.684,0.049,30.913,0.036,46.200,0.030,69.048,0.025,103.195,0.022,154.228,0.019,230.500,0.016,344.491,0.014,514.854,0.013,769.469,0.013,1150.000,0.013)}
+
+.func Cgs(V) {table(V,-5.000,6.446,-4.750,5.841,-4.500,5.355,-4.250,5.127,-4.000,5.094,-3.750,5.094,-3.500,5.101,-3.250,5.112,-3.000,5.131,-2.750,5.156,-2.500,5.191,-2.250,5.232,-2.000,5.281,-1.750,5.339,-1.500,5.406,-1.250,5.489,-1.000,5.618,-0.750,5.845,-0.500,6.156,-0.250,6.492,0.000,6.831,0.250,7.092,0.500,7.337,0.750,7.559,1.000,7.768,1.250,7.951,1.500,8.115,1.750,8.231,2.000,8.332,2.250,8.392,2.500,8.446,2.750,8.487,3.000,8.519,3.250,8.548,3.500,8.572,3.750,8.593,4.000,8.612,4.250,8.630,4.500,8.644,4.750,8.659,5.000,8.672,6.000,8.717,7.000,8.753,8.000,8.784,9.000,8.810,10.000,8.832,11.000,8.851,12.000,8.868,13.000,8.884,14.000,8.896,15.000,8.908)}
+
+
+.param Is_ideal=1.000000e-02
+.param n_ideal=5.289052e-01
+.param Rs_ideal=9.093340e-03
+.ENDS 21
+
+.SUBCKT 22 D G S Tj Id
+*** Forward Conduction Model ***
+Gds D s2 Value {V(Fwd)}
+Eds Fwd 0 Value {AF*IdFwd(V(D,s2),V(G,S)+Vths+VthFwd(V(Tj)))}
+GRds s2 S Value {V(s2,S)/((Rdss + RTJ(V(Tj)))/AF)}
+R1 s2 S 1k
+Rbypass D S 1G
+
+.func IdFwd(Vds,Vgs) {a(Vgs)*atan(b(Vgs)*max(Vds,0)) + c(Vgs)*Vds + b(Vgs)*a(Vgs)*min(Vds,0)}
+
+ECurr Id 0 Value {abs(V(Rev)) + abs(V(Fwd))}
+*** Third Quadrant [Without RR] ***
+GRbd D d2 Value {V(D,d2)/((RdBD(V(Tj))+Rs(V(G,S)+VthBD(V(Tj))))/(AF))}
+R2 D d2 1k
+GTQ S d2 Value {V(Rev)}
+ETQ Rev 0 Value {AF*min(Is*(-1+exp(max(V(S,d2),-1n)/(nn(V(G,S)+VthBD(V(Tj)))))),1e6)}
+
+*** CV Model ***
+
+G_cdg    D    G    Value {(AF*(agd*1e-9*Cdg(V(D,G))+{Cgd_Module}))*ddt(V(D,G))}
+G_cds    d2   S    Value {AF*ads*1e-9*Cds(V(d2,S))*ddt(V(d2,S))}
+G_cgs    G    S    Value {AF*ags*1e-9*Cgs(V(G,S))*ddt(V(G,S))}
+
+**********************************************************************
+********************** Models and Parameters ***********************
+**********************************************************************
+
+
+
+*** Forward Conduction Parameters ***
+.func a(Vgs) {table(Vgs,0,8.3333e-10,0.5,3.2912e-08,1,1.2999e-06,1.5,5.1337e-05,2,0.0020275,2.5,0.080077,3,0.26452,3.5,0.71473,4,1.6389,4.5,3.3376,5,6.0898,5.5,10.2882,6,16.2661,6.5,24.3611,7,34.6055,7.5,47.4174,8,62.6933,8.5,80.6968,9,101.0675,9.5,123.5675,10,147.7718,10.5,171.2769,11,190.0091,11.5,203.7739,12,212.6808,12.5,218.0873,13,221.6218,13.5,227.1394,14,234.3234,14.5,242.355,15,250.0825,15.5,257.8381,16,264.8008)}
+.func b(Vgs) {table(Vgs,0,1,0.5,1,1,1,1.5,1,2,1,2.5,1,3,1,3.5,1,4,0.9975,4.5,0.97964,5,0.94622,5.5,0.89362,6,0.82591,6.5,0.74735,7,0.67699,7.5,0.61032,8,0.5554,8.5,0.5061,9,0.45825,9.5,0.41621,10,0.37933,10.5,0.35168,11,0.33998,11.5,0.34857,12,0.36657,12.5,0.39223,13,0.41893,13.5,0.43971,14,0.45364,14.5,0.45951,15,0.46446,15.5,0.4681,16,0.4681)}
+.func c(Vgs) {table(Vgs,0,0,0.5,0,1,0,1.5,4.289e-21,2,3.9117e-05,2.5,0.00018305,3,0.0005664,3.5,0.0013804,4,0.0029383,4.5,0.0054905,5,0.0094785,5.5,0.01499,6,0.022754,6.5,0.033549,7,0.046351,7.5,0.061145,8,0.079045,8.5,0.1014,9,0.12631,9.5,0.16171,10,0.22546,10.5,0.37702,11,0.82475,11.5,1.5403,12,2.5028,12.5,3.5495,13,4.5817,13.5,5.3382,14,5.8376,14.5,6.0765,15,6.1994,15.5,6.2613,16,6.2613)}
+.func RTJ(Tj) {table(Tj,25,0.0072779,50,0.0087253,75,0.010142,100,0.014081,125,0.014563,150,0.017332,175,0.020618)}
+.func VthFwd(Tj) {table(Tj,25,-0.45002,50,-0.45002,75,-0.34589,100,0,125,0.018162,150,0.16655,175,0.31086)}
+
+
+*** Reverse Conduction Parameters ***
+.func nn(Vgs) {table(Vgs,-5,0.52891,-4,0.50592,-3,0.47306,-2,0.42956,-1,0.37673,0,0.31806,1,0.26129,2,0.20922,3,0.1639,4,0.12839,5,0.10617,6,0.1,7,0.1,8,0.1,9,0.1,10,0.1,11,0.1,12,0.1,13,0.1,14,0.1,15,0.1,16,0.1)}
+.func Rs(Vgs) {table(Vgs,-5,0.0090933,-4,0.009437,-3,0.010377,-2,0.012059,-1,0.014454,0,0.017181,1,0.019512,2,0.021251,3,0.022577,4,0.024034,5,0.026668,6,0.030822,7,0.036464,8,0.043839,9,0.051754,10,0.057613,11,0.062846,12,0.07868,13,0.10308,14,0.12982,15,0.14509,16,0.15012)}
+.param Is=10.00m
+.func RdBD(Tj) {table(Tj,25,1.7632e-05,50,-0.00038363,75,-0.0007569,100,0,125,-0.00045418,150,0.0005986,175,0.0019148)}
+.func VthBD(Tj) {table(Tj,25,-1,50,-1,75,-1,100,0,125,-0.22731,150,0.56847,175,1.3054)}
+
+*** Device Capacitance Values ***
+.func Cds(V) {table(V,0.010,4.513,0.015,4.514,0.022,4.502,0.033,4.496,0.050,4.479,0.075,4.450,0.111,4.425,0.167,4.375,0.249,4.312,0.372,4.227,0.556,4.105,0.831,3.958,1.242,3.765,1.856,3.528,2.774,3.255,4.146,2.946,6.196,2.603,9.260,1.924,13.840,1.554,20.684,1.243,30.913,0.964,46.200,0.772,69.048,0.625,103.195,0.509,154.228,0.416,230.500,0.341,344.491,0.280,514.854,0.232,769.469,0.219,1150.000,0.216)}
+
+.func Cdg(V) {table(V,0.010,2.204,0.015,2.196,0.022,2.181,0.033,2.161,0.050,2.132,0.075,2.095,0.111,2.032,0.167,1.946,0.249,1.816,0.372,1.647,0.556,1.457,0.831,1.272,1.242,1.103,1.856,0.925,2.774,0.751,4.146,0.594,6.196,0.441,9.260,0.092,13.840,0.061,20.684,0.049,30.913,0.036,46.200,0.030,69.048,0.025,103.195,0.022,154.228,0.019,230.500,0.016,344.491,0.014,514.854,0.013,769.469,0.013,1150.000,0.013)}
+
+.func Cgs(V) {table(V,-5.000,6.446,-4.750,5.841,-4.500,5.355,-4.250,5.127,-4.000,5.094,-3.750,5.094,-3.500,5.101,-3.250,5.112,-3.000,5.131,-2.750,5.156,-2.500,5.191,-2.250,5.232,-2.000,5.281,-1.750,5.339,-1.500,5.406,-1.250,5.489,-1.000,5.618,-0.750,5.845,-0.500,6.156,-0.250,6.492,0.000,6.831,0.250,7.092,0.500,7.337,0.750,7.559,1.000,7.768,1.250,7.951,1.500,8.115,1.750,8.231,2.000,8.332,2.250,8.392,2.500,8.446,2.750,8.487,3.000,8.519,3.250,8.548,3.500,8.572,3.750,8.593,4.000,8.612,4.250,8.630,4.500,8.644,4.750,8.659,5.000,8.672,6.000,8.717,7.000,8.753,8.000,8.784,9.000,8.810,10.000,8.832,11.000,8.851,12.000,8.868,13.000,8.884,14.000,8.896,15.000,8.908)}
+
+
+.ENDS 22
+
+.SUBCKT 23 D G S Tj Id
+*** Forward Conduction Model ***
+Gds D s2 Value {V(Fwd)}
+Eds Fwd 0 Value {AF*IdFwd(V(D,s2),V(G,S)+Vths+VthFwd(V(Tj)))}
+GRds s2 S Value {V(s2,S)/((Rdss + RTJ(V(Tj)))/AF)}
+R1 s2 S 1k
+Rbypass D S 1G
+
+.func IdFwd(Vds,Vgs) {a(Vgs)*atan(b(Vgs)*max(Vds,0)) + c(Vgs)*Vds + b(Vgs)*a(Vgs)*min(Vds,0)}
+
+ECurr Id 0 Value {abs(V(Rev)) + abs(V(Fwd))}
+*** Third Quadrant [With RR] ***
+GRbd D d2 Value {V(D,d2)/((RdBD(V(Tj))+Rs(V(G,S)+VthBD(V(Tj))))/(AF))}
+R2 D d2 1k
+GI1 0 qm Value {-1/tau(V(Tj))*V(qm)+V(qe,qm)/TM(V(Tj))}
+EV1 qe 0 Value {min((1+TM(V(Tj))/tau(V(Tj)))*Is*tau(V(Tj))*(-1+exp(max(V(S,d2),-1n)/(nn(V(G,S)+VthBD(V(Tj)))))),1e6)}
+GITQ S d2 Value {V(Rev)}
+EITQ Rev 0 Value {AF*V(qe,qm)/TM(V(Tj))}
+C1 qm 0 1
+R3 qm 0 100G
+.func tau(Tj) {1e-9*table(Tj,25,tau1,175,tau2)}
+.func TM(Tj) {1e-9*table(Tj,25,tm1,175,tm2)}
+
+*** CV Model ***
+
+G_cdg    D    G    Value {(AF*(agd*1e-9*Cdg(V(D,G))+{Cgd_Module}))*ddt(V(D,G))}
+G_cds    d2   S    Value {AF*ads*1e-9*Cds(V(d2,S))*ddt(V(d2,S))}
+G_cgs    G    S    Value {AF*ags*1e-9*Cgs(V(G,S))*ddt(V(G,S))}
+
+**********************************************************************
+********************** Models and Parameters ***********************
+**********************************************************************
+
+
+
+*** Forward Conduction Parameters ***
+.func a(Vgs) {table(Vgs,0,8.3333e-10,0.5,3.2912e-08,1,1.2999e-06,1.5,5.1337e-05,2,0.0020275,2.5,0.080077,3,0.26452,3.5,0.71473,4,1.6389,4.5,3.3376,5,6.0898,5.5,10.2882,6,16.2661,6.5,24.3611,7,34.6055,7.5,47.4174,8,62.6933,8.5,80.6968,9,101.0675,9.5,123.5675,10,147.7718,10.5,171.2769,11,190.0091,11.5,203.7739,12,212.6808,12.5,218.0873,13,221.6218,13.5,227.1394,14,234.3234,14.5,242.355,15,250.0825,15.5,257.8381,16,264.8008)}
+.func b(Vgs) {table(Vgs,0,1,0.5,1,1,1,1.5,1,2,1,2.5,1,3,1,3.5,1,4,0.9975,4.5,0.97964,5,0.94622,5.5,0.89362,6,0.82591,6.5,0.74735,7,0.67699,7.5,0.61032,8,0.5554,8.5,0.5061,9,0.45825,9.5,0.41621,10,0.37933,10.5,0.35168,11,0.33998,11.5,0.34857,12,0.36657,12.5,0.39223,13,0.41893,13.5,0.43971,14,0.45364,14.5,0.45951,15,0.46446,15.5,0.4681,16,0.4681)}
+.func c(Vgs) {table(Vgs,0,0,0.5,0,1,0,1.5,4.289e-21,2,3.9117e-05,2.5,0.00018305,3,0.0005664,3.5,0.0013804,4,0.0029383,4.5,0.0054905,5,0.0094785,5.5,0.01499,6,0.022754,6.5,0.033549,7,0.046351,7.5,0.061145,8,0.079045,8.5,0.1014,9,0.12631,9.5,0.16171,10,0.22546,10.5,0.37702,11,0.82475,11.5,1.5403,12,2.5028,12.5,3.5495,13,4.5817,13.5,5.3382,14,5.8376,14.5,6.0765,15,6.1994,15.5,6.2613,16,6.2613)}
+.func RTJ(Tj) {table(Tj,25,0.0072779,50,0.0087253,75,0.010142,100,0.014081,125,0.014563,150,0.017332,175,0.020618)}
+.func VthFwd(Tj) {table(Tj,25,-0.45002,50,-0.45002,75,-0.34589,100,0,125,0.018162,150,0.16655,175,0.31086)}
+
+
+*** Reverse Conduction Parameters ***
+.func nn(Vgs) {table(Vgs,-5,0.52891,-4,0.50592,-3,0.47306,-2,0.42956,-1,0.37673,0,0.31806,1,0.26129,2,0.20922,3,0.1639,4,0.12839,5,0.10617,6,0.1,7,0.1,8,0.1,9,0.1,10,0.1,11,0.1,12,0.1,13,0.1,14,0.1,15,0.1,16,0.1)}
+.func Rs(Vgs) {table(Vgs,-5,0.0090933,-4,0.009437,-3,0.010377,-2,0.012059,-1,0.014454,0,0.017181,1,0.019512,2,0.021251,3,0.022577,4,0.024034,5,0.026668,6,0.030822,7,0.036464,8,0.043839,9,0.051754,10,0.057613,11,0.062846,12,0.07868,13,0.10308,14,0.12982,15,0.14509,16,0.15012)}
+.param Is=10.00m
+.func RdBD(Tj) {table(Tj,25,1.7632e-05,50,-0.00038363,75,-0.0007569,100,0,125,-0.00045418,150,0.0005986,175,0.0019148)}
+.func VthBD(Tj) {table(Tj,25,-1,50,-1,75,-1,100,0,125,-0.22731,150,0.56847,175,1.3054)}
+
+*** Device Capacitance Values ***
+.func Cds(V) {table(V,0.010,4.513,0.015,4.514,0.022,4.502,0.033,4.496,0.050,4.479,0.075,4.450,0.111,4.425,0.167,4.375,0.249,4.312,0.372,4.227,0.556,4.105,0.831,3.958,1.242,3.765,1.856,3.528,2.774,3.255,4.146,2.946,6.196,2.603,9.260,1.924,13.840,1.554,20.684,1.243,30.913,0.964,46.200,0.772,69.048,0.625,103.195,0.509,154.228,0.416,230.500,0.341,344.491,0.280,514.854,0.232,769.469,0.219,1150.000,0.216)}
+
+.func Cdg(V) {table(V,0.010,2.204,0.015,2.196,0.022,2.181,0.033,2.161,0.050,2.132,0.075,2.095,0.111,2.032,0.167,1.946,0.249,1.816,0.372,1.647,0.556,1.457,0.831,1.272,1.242,1.103,1.856,0.925,2.774,0.751,4.146,0.594,6.196,0.441,9.260,0.092,13.840,0.061,20.684,0.049,30.913,0.036,46.200,0.030,69.048,0.025,103.195,0.022,154.228,0.019,230.500,0.016,344.491,0.014,514.854,0.013,769.469,0.013,1150.000,0.013)}
+
+.func Cgs(V) {table(V,-5.000,6.446,-4.750,5.841,-4.500,5.355,-4.250,5.127,-4.000,5.094,-3.750,5.094,-3.500,5.101,-3.250,5.112,-3.000,5.131,-2.750,5.156,-2.500,5.191,-2.250,5.232,-2.000,5.281,-1.750,5.339,-1.500,5.406,-1.250,5.489,-1.000,5.618,-0.750,5.845,-0.500,6.156,-0.250,6.492,0.000,6.831,0.250,7.092,0.500,7.337,0.750,7.559,1.000,7.768,1.250,7.951,1.500,8.115,1.750,8.231,2.000,8.332,2.250,8.392,2.500,8.446,2.750,8.487,3.000,8.519,3.250,8.548,3.500,8.572,3.750,8.593,4.000,8.612,4.250,8.630,4.500,8.644,4.750,8.659,5.000,8.672,6.000,8.717,7.000,8.753,8.000,8.784,9.000,8.810,10.000,8.832,11.000,8.851,12.000,8.868,13.000,8.884,14.000,8.896,15.000,8.908)}
+
+
+.ENDS 23
+
+.SUBCKT 31 D G S Tj Id
+*** Forward Conduction Model ***
+Gds D s2 Value {V(Fwd)}
+Eds Fwd 0 Value {AF*IdFwd(V(D,s2),V(G,S)+Vths+VthFwd(V(Tj)))}
+GRds s2 S Value {V(s2,S)/((Rdss + RTJ(V(Tj)))/AF)}
+R1 s2 S 1k
+Rbypass D S 1G
+
+.func IdFwd(Vds,Vgs) {a(Vgs)*atan(b(Vgs)*max(Vds,0)) + c(Vgs)*Vds + b(Vgs)*a(Vgs)*min(Vds,0)}
+
+ECurr Id 0 Value {abs(I(Rbd)) + abs(V(Fwd))}
+DBD S d2 IdealDiode
+Rbd d2 D {Rs_ideal/(2*AF)}
+.model IdealDiode D(level=1 Is={AF*Is_ideal} N={n_ideal/((TEMP+273.15)*(0.026/(27+273.15)))} Rs={Rs_ideal/(2*AF)} Tnom={TEMP})
+*** CV Model ***
+
+G_cdg    D    G    Value {(AF*(agd*1e-9*Cdg(V(D,G))+{Cgd_Module}))*ddt(V(D,G))}
+G_cds    d2   S    Value {AF*ads*1e-9*Cds(V(d2,S))*ddt(V(d2,S))}
+G_cgs    G    S    Value {AF*ags*1e-9*Cgs(V(G,S))*ddt(V(G,S))}
+
+**********************************************************************
+********************** Models and Parameters ***********************
+**********************************************************************
+
+
+
+*** Forward Conduction Parameters ***
+.func a(Vgs) {table(Vgs,0,8.3333e-10,0.5,1.5223e-08,1,2.781e-07,1.5,5.0802e-06,2,9.2805e-05,2.5,0.0016954,3,0.030971,3.5,0.56577,4,1.3795,4.5,2.8439,5,5.2513,5.5,8.9439,6,14.2329,6.5,21.4605,7,30.9733,7.5,43.0033,8,57.4244,8.5,74.4,9,93.8197,9.5,115.8148,10,139.8737,10.5,164.6179,11,188.1025,11.5,212.0784,12,230.543,12.5,248.3719,13,261.7359,13.5,272.4872,14,277.9313,14.5,285.5709,15,290.2066,15.5,296.366,16,303.553,16.5,312.2767,17,320.0408,17.5,327.5226,18,334.2035)}
+.func b(Vgs) {table(Vgs,0,1,0.5,1,1,1,1.5,1,2,1,2.5,1,3,1,3.5,1,4,1,4.5,1,5,0.99181,5.5,0.96283,6,0.9176,6.5,0.85505,7,0.77776,7.5,0.69593,8,0.62808,8.5,0.56736,9,0.51596,9.5,0.47107,10,0.43267,10.5,0.3991,11,0.37513,11.5,0.35475,12,0.35408,12.5,0.3537,13,0.36378,13.5,0.38076,14,0.41115,14.5,0.43007,15,0.45495,15.5,0.47134,16,0.48034,16.5,0.48034,17,0.48034,17.5,0.48034,18,0.48034)}
+.func c(Vgs) {table(Vgs,0,0,0.5,0,1,0,1.5,0,2,0,2.5,0.00010249,3,0.00041581,3.5,0.00082827,4,0.0017818,4.5,0.0043926,5,0.0092025,5.5,0.01719,6,0.029267,6.5,0.046511,7,0.06971,7.5,0.097756,8,0.13713,8.5,0.18911,9,0.26254,9.5,0.35005,10,0.46519,10.5,0.6585,11,1.0152,11.5,1.3977,12,1.8293,12.5,2.2399,13,2.5575,13.5,2.6977,14,2.7851,14.5,2.8016,15,2.8044,15.5,2.8072,16,2.8072,16.5,2.8072,17,2.8072,17.5,2.8072,18,2.8072)}
+.func RTJ(Tj) {table(Tj,25,0.0042885,50,0.0055065,75,0.0069053,100,0.0092248,125,0.010712,150,0.013209,175,0.015789)}
+.func VthFwd(Tj) {table(Tj,25,-0.95726,50,-0.64503,75,-0.384,100,0,125,0.054098,150,0.31341,175,0.53632)}
+
+
+*** Reverse Conduction Parameters ***
+.param Is=10.00m
+.func RdBD(Tj) {table(Tj,25,0.0045143,50,0.0022231,75,0.00051694,100,0,125,-0.00012872,150,0.0017765,175,0.0043293)}
+.func VthBD(Tj) {table(Tj,25,-0.16209,50,-0.090079,75,-0.042218,100,0,125,0.17757,150,0.46255,175,0.76542)}
+
+*** Device Capacitance Values ***
+.func Cds(V) {table(V,0.010,5.458,0.015,5.451,0.022,5.440,0.033,5.449,0.050,5.424,0.075,5.403,0.111,5.364,0.167,5.326,0.249,5.247,0.372,5.160,0.556,5.025,0.831,4.855,1.242,4.635,1.856,4.355,2.774,4.027,4.146,3.655,6.196,3.250,9.260,2.646,13.840,1.988,20.684,1.597,30.913,1.239,46.200,0.989,69.048,0.800,103.195,0.652,154.228,0.534,230.500,0.438,344.491,0.361,514.854,0.299,769.469,0.268,1150.000,0.265)}
+
+.func Cdg(V) {table(V,0.010,2.432,0.015,2.415,0.022,2.402,0.033,2.374,0.050,2.338,0.075,2.304,0.111,2.228,0.167,2.131,0.249,1.999,0.372,1.816,0.556,1.631,0.831,1.454,1.242,1.274,1.856,1.082,2.774,0.891,4.146,0.714,6.196,0.542,9.260,0.278,13.840,0.087,20.684,0.069,30.913,0.051,46.200,0.042,69.048,0.035,103.195,0.030,154.228,0.027,230.500,0.023,344.491,0.021,514.854,0.018,769.469,0.018,1150.000,0.018)}
+
+.func Cgs(V) {table(V,-5.000,8.830,-4.750,8.114,-4.500,7.543,-4.250,7.119,-4.000,7.000,-3.750,6.992,-3.500,7.000,-3.250,7.013,-3.000,7.036,-2.750,7.066,-2.500,7.105,-2.250,7.157,-2.000,7.215,-1.750,7.283,-1.500,7.360,-1.250,7.447,-1.000,7.574,-0.750,7.806,-0.500,8.165,-0.250,8.545,0.000,8.957,0.250,9.281,0.500,9.600,0.750,9.861,1.000,10.080,1.250,10.289,1.500,10.506,1.750,10.677,2.000,10.825,2.250,10.914,2.500,10.997,2.750,11.054,3.000,11.101,3.250,11.139,3.500,11.170,3.750,11.198,4.000,11.218,4.250,11.240,4.500,11.258,4.750,11.274,5.000,11.289,6.000,11.338,7.000,11.376,8.000,11.409,9.000,11.436,10.000,11.461,11.000,11.484,12.000,11.503,13.000,11.522,14.000,11.538,15.000,11.555)}
+
+
+.param Is_ideal=1.000000e-02
+.param n_ideal=5.182554e-01
+.param Rs_ideal=8.516106e-03
+.ENDS 31
+
+.SUBCKT 32 D G S Tj Id
+*** Forward Conduction Model ***
+Gds D s2 Value {V(Fwd)}
+Eds Fwd 0 Value {AF*IdFwd(V(D,s2),V(G,S)+Vths+VthFwd(V(Tj)))}
+GRds s2 S Value {V(s2,S)/((Rdss + RTJ(V(Tj)))/AF)}
+R1 s2 S 1k
+Rbypass D S 1G
+
+.func IdFwd(Vds,Vgs) {a(Vgs)*atan(b(Vgs)*max(Vds,0)) + c(Vgs)*Vds + b(Vgs)*a(Vgs)*min(Vds,0)}
+
+ECurr Id 0 Value {abs(V(Rev)) + abs(V(Fwd))}
+*** Third Quadrant [Without RR] ***
+GRbd D d2 Value {V(D,d2)/((RdBD(V(Tj))+Rs(V(G,S)+VthBD(V(Tj))))/(AF))}
+R2 D d2 1k
+GTQ S d2 Value {V(Rev)}
+ETQ Rev 0 Value {AF*min(Is*(-1+exp(max(V(S,d2),-1n)/(nn(V(G,S)+VthBD(V(Tj)))))),1e6)}
+
+*** CV Model ***
+
+G_cdg    D    G    Value {(AF*(agd*1e-9*Cdg(V(D,G))+{Cgd_Module}))*ddt(V(D,G))}
+G_cds    d2   S    Value {AF*ads*1e-9*Cds(V(d2,S))*ddt(V(d2,S))}
+G_cgs    G    S    Value {AF*ags*1e-9*Cgs(V(G,S))*ddt(V(G,S))}
+
+**********************************************************************
+********************** Models and Parameters ***********************
+**********************************************************************
+
+
+
+*** Forward Conduction Parameters ***
+.func a(Vgs) {table(Vgs,0,8.3333e-10,0.5,1.5223e-08,1,2.781e-07,1.5,5.0802e-06,2,9.2805e-05,2.5,0.0016954,3,0.030971,3.5,0.56577,4,1.3795,4.5,2.8439,5,5.2513,5.5,8.9439,6,14.2329,6.5,21.4605,7,30.9733,7.5,43.0033,8,57.4244,8.5,74.4,9,93.8197,9.5,115.8148,10,139.8737,10.5,164.6179,11,188.1025,11.5,212.0784,12,230.543,12.5,248.3719,13,261.7359,13.5,272.4872,14,277.9313,14.5,285.5709,15,290.2066,15.5,296.366,16,303.553,16.5,312.2767,17,320.0408,17.5,327.5226,18,334.2035)}
+.func b(Vgs) {table(Vgs,0,1,0.5,1,1,1,1.5,1,2,1,2.5,1,3,1,3.5,1,4,1,4.5,1,5,0.99181,5.5,0.96283,6,0.9176,6.5,0.85505,7,0.77776,7.5,0.69593,8,0.62808,8.5,0.56736,9,0.51596,9.5,0.47107,10,0.43267,10.5,0.3991,11,0.37513,11.5,0.35475,12,0.35408,12.5,0.3537,13,0.36378,13.5,0.38076,14,0.41115,14.5,0.43007,15,0.45495,15.5,0.47134,16,0.48034,16.5,0.48034,17,0.48034,17.5,0.48034,18,0.48034)}
+.func c(Vgs) {table(Vgs,0,0,0.5,0,1,0,1.5,0,2,0,2.5,0.00010249,3,0.00041581,3.5,0.00082827,4,0.0017818,4.5,0.0043926,5,0.0092025,5.5,0.01719,6,0.029267,6.5,0.046511,7,0.06971,7.5,0.097756,8,0.13713,8.5,0.18911,9,0.26254,9.5,0.35005,10,0.46519,10.5,0.6585,11,1.0152,11.5,1.3977,12,1.8293,12.5,2.2399,13,2.5575,13.5,2.6977,14,2.7851,14.5,2.8016,15,2.8044,15.5,2.8072,16,2.8072,16.5,2.8072,17,2.8072,17.5,2.8072,18,2.8072)}
+.func RTJ(Tj) {table(Tj,25,0.0042885,50,0.0055065,75,0.0069053,100,0.0092248,125,0.010712,150,0.013209,175,0.015789)}
+.func VthFwd(Tj) {table(Tj,25,-0.95726,50,-0.64503,75,-0.384,100,0,125,0.054098,150,0.31341,175,0.53632)}
+
+
+*** Reverse Conduction Parameters ***
+.func nn(Vgs) {table(Vgs,-5,0.51826,-4,0.49552,-3,0.46376,-2,0.4206,-1,0.36638,0,0.30663,1,0.25144,2,0.20309,3,0.16071,4,0.13174,5,0.11011,6,0.10123,7,0.1,8,0.1,9,0.1,10,0.1,11,0.1,12,0.1,13,0.1,14,0.2301,15,0.44619,16,0.73689,17,1.0564,18,1.3493)}
+.func Rs(Vgs) {table(Vgs,-5,0.0085161,-4,0.0088408,-3,0.0097345,-2,0.011403,-1,0.013951,0,0.016828,1,0.018972,2,0.020229,3,0.020872,4,0.021149,5,0.022863,6,0.026412,7,0.032467,8,0.040746,9,0.052099,10,0.066689,11,0.080382,12,0.10592,13,0.17575,14,0.71286,15,2.458,16,7.1538,17,17.5017,18,36.0176)}
+.param Is=10.00m
+.func RdBD(Tj) {table(Tj,25,0.0045143,50,0.0022231,75,0.00051694,100,0,125,-0.00012872,150,0.0017765,175,0.0043293)}
+.func VthBD(Tj) {table(Tj,25,-0.16209,50,-0.090079,75,-0.042218,100,0,125,0.17757,150,0.46255,175,0.76542)}
+
+*** Device Capacitance Values ***
+.func Cds(V) {table(V,0.010,5.458,0.015,5.451,0.022,5.440,0.033,5.449,0.050,5.424,0.075,5.403,0.111,5.364,0.167,5.326,0.249,5.247,0.372,5.160,0.556,5.025,0.831,4.855,1.242,4.635,1.856,4.355,2.774,4.027,4.146,3.655,6.196,3.250,9.260,2.646,13.840,1.988,20.684,1.597,30.913,1.239,46.200,0.989,69.048,0.800,103.195,0.652,154.228,0.534,230.500,0.438,344.491,0.361,514.854,0.299,769.469,0.268,1150.000,0.265)}
+
+.func Cdg(V) {table(V,0.010,2.432,0.015,2.415,0.022,2.402,0.033,2.374,0.050,2.338,0.075,2.304,0.111,2.228,0.167,2.131,0.249,1.999,0.372,1.816,0.556,1.631,0.831,1.454,1.242,1.274,1.856,1.082,2.774,0.891,4.146,0.714,6.196,0.542,9.260,0.278,13.840,0.087,20.684,0.069,30.913,0.051,46.200,0.042,69.048,0.035,103.195,0.030,154.228,0.027,230.500,0.023,344.491,0.021,514.854,0.018,769.469,0.018,1150.000,0.018)}
+
+.func Cgs(V) {table(V,-5.000,8.830,-4.750,8.114,-4.500,7.543,-4.250,7.119,-4.000,7.000,-3.750,6.992,-3.500,7.000,-3.250,7.013,-3.000,7.036,-2.750,7.066,-2.500,7.105,-2.250,7.157,-2.000,7.215,-1.750,7.283,-1.500,7.360,-1.250,7.447,-1.000,7.574,-0.750,7.806,-0.500,8.165,-0.250,8.545,0.000,8.957,0.250,9.281,0.500,9.600,0.750,9.861,1.000,10.080,1.250,10.289,1.500,10.506,1.750,10.677,2.000,10.825,2.250,10.914,2.500,10.997,2.750,11.054,3.000,11.101,3.250,11.139,3.500,11.170,3.750,11.198,4.000,11.218,4.250,11.240,4.500,11.258,4.750,11.274,5.000,11.289,6.000,11.338,7.000,11.376,8.000,11.409,9.000,11.436,10.000,11.461,11.000,11.484,12.000,11.503,13.000,11.522,14.000,11.538,15.000,11.555)}
+
+
+.ENDS 32
+
+.SUBCKT 33 D G S Tj Id
+*** Forward Conduction Model ***
+Gds D s2 Value {V(Fwd)}
+Eds Fwd 0 Value {AF*IdFwd(V(D,s2),V(G,S)+Vths+VthFwd(V(Tj)))}
+GRds s2 S Value {V(s2,S)/((Rdss + RTJ(V(Tj)))/AF)}
+R1 s2 S 1k
+Rbypass D S 1G
+
+.func IdFwd(Vds,Vgs) {a(Vgs)*atan(b(Vgs)*max(Vds,0)) + c(Vgs)*Vds + b(Vgs)*a(Vgs)*min(Vds,0)}
+
+ECurr Id 0 Value {abs(V(Rev)) + abs(V(Fwd))}
+*** Third Quadrant [With RR] ***
+GRbd D d2 Value {V(D,d2)/((RdBD(V(Tj))+Rs(V(G,S)+VthBD(V(Tj))))/(AF))}
+R2 D d2 1k
+GI1 0 qm Value {-1/tau(V(Tj))*V(qm)+V(qe,qm)/TM(V(Tj))}
+EV1 qe 0 Value {min((1+TM(V(Tj))/tau(V(Tj)))*Is*tau(V(Tj))*(-1+exp(max(V(S,d2),-1n)/(nn(V(G,S)+VthBD(V(Tj)))))),1e6)}
+GITQ S d2 Value {V(Rev)}
+EITQ Rev 0 Value {AF*V(qe,qm)/TM(V(Tj))}
+C1 qm 0 1
+R3 qm 0 100G
+.func tau(Tj) {1e-9*table(Tj,25,tau1,175,tau2)}
+.func TM(Tj) {1e-9*table(Tj,25,tm1,175,tm2)}
+
+*** CV Model ***
+
+G_cdg    D    G    Value {(AF*(agd*1e-9*Cdg(V(D,G))+{Cgd_Module}))*ddt(V(D,G))}
+G_cds    d2   S    Value {AF*ads*1e-9*Cds(V(d2,S))*ddt(V(d2,S))}
+G_cgs    G    S    Value {AF*ags*1e-9*Cgs(V(G,S))*ddt(V(G,S))}
+
+**********************************************************************
+********************** Models and Parameters ***********************
+**********************************************************************
+
+
+
+*** Forward Conduction Parameters ***
+.func a(Vgs) {table(Vgs,0,8.3333e-10,0.5,1.5223e-08,1,2.781e-07,1.5,5.0802e-06,2,9.2805e-05,2.5,0.0016954,3,0.030971,3.5,0.56577,4,1.3795,4.5,2.8439,5,5.2513,5.5,8.9439,6,14.2329,6.5,21.4605,7,30.9733,7.5,43.0033,8,57.4244,8.5,74.4,9,93.8197,9.5,115.8148,10,139.8737,10.5,164.6179,11,188.1025,11.5,212.0784,12,230.543,12.5,248.3719,13,261.7359,13.5,272.4872,14,277.9313,14.5,285.5709,15,290.2066,15.5,296.366,16,303.553,16.5,312.2767,17,320.0408,17.5,327.5226,18,334.2035)}
+.func b(Vgs) {table(Vgs,0,1,0.5,1,1,1,1.5,1,2,1,2.5,1,3,1,3.5,1,4,1,4.5,1,5,0.99181,5.5,0.96283,6,0.9176,6.5,0.85505,7,0.77776,7.5,0.69593,8,0.62808,8.5,0.56736,9,0.51596,9.5,0.47107,10,0.43267,10.5,0.3991,11,0.37513,11.5,0.35475,12,0.35408,12.5,0.3537,13,0.36378,13.5,0.38076,14,0.41115,14.5,0.43007,15,0.45495,15.5,0.47134,16,0.48034,16.5,0.48034,17,0.48034,17.5,0.48034,18,0.48034)}
+.func c(Vgs) {table(Vgs,0,0,0.5,0,1,0,1.5,0,2,0,2.5,0.00010249,3,0.00041581,3.5,0.00082827,4,0.0017818,4.5,0.0043926,5,0.0092025,5.5,0.01719,6,0.029267,6.5,0.046511,7,0.06971,7.5,0.097756,8,0.13713,8.5,0.18911,9,0.26254,9.5,0.35005,10,0.46519,10.5,0.6585,11,1.0152,11.5,1.3977,12,1.8293,12.5,2.2399,13,2.5575,13.5,2.6977,14,2.7851,14.5,2.8016,15,2.8044,15.5,2.8072,16,2.8072,16.5,2.8072,17,2.8072,17.5,2.8072,18,2.8072)}
+.func RTJ(Tj) {table(Tj,25,0.0042885,50,0.0055065,75,0.0069053,100,0.0092248,125,0.010712,150,0.013209,175,0.015789)}
+.func VthFwd(Tj) {table(Tj,25,-0.95726,50,-0.64503,75,-0.384,100,0,125,0.054098,150,0.31341,175,0.53632)}
+
+
+*** Reverse Conduction Parameters ***
+.func nn(Vgs) {table(Vgs,-5,0.51826,-4,0.49552,-3,0.46376,-2,0.4206,-1,0.36638,0,0.30663,1,0.25144,2,0.20309,3,0.16071,4,0.13174,5,0.11011,6,0.10123,7,0.1,8,0.1,9,0.1,10,0.1,11,0.1,12,0.1,13,0.1,14,0.2301,15,0.44619,16,0.73689,17,1.0564,18,1.3493)}
+.func Rs(Vgs) {table(Vgs,-5,0.0085161,-4,0.0088408,-3,0.0097345,-2,0.011403,-1,0.013951,0,0.016828,1,0.018972,2,0.020229,3,0.020872,4,0.021149,5,0.022863,6,0.026412,7,0.032467,8,0.040746,9,0.052099,10,0.066689,11,0.080382,12,0.10592,13,0.17575,14,0.71286,15,2.458,16,7.1538,17,17.5017,18,36.0176)}
+.param Is=10.00m
+.func RdBD(Tj) {table(Tj,25,0.0045143,50,0.0022231,75,0.00051694,100,0,125,-0.00012872,150,0.0017765,175,0.0043293)}
+.func VthBD(Tj) {table(Tj,25,-0.16209,50,-0.090079,75,-0.042218,100,0,125,0.17757,150,0.46255,175,0.76542)}
+
+*** Device Capacitance Values ***
+.func Cds(V) {table(V,0.010,5.458,0.015,5.451,0.022,5.440,0.033,5.449,0.050,5.424,0.075,5.403,0.111,5.364,0.167,5.326,0.249,5.247,0.372,5.160,0.556,5.025,0.831,4.855,1.242,4.635,1.856,4.355,2.774,4.027,4.146,3.655,6.196,3.250,9.260,2.646,13.840,1.988,20.684,1.597,30.913,1.239,46.200,0.989,69.048,0.800,103.195,0.652,154.228,0.534,230.500,0.438,344.491,0.361,514.854,0.299,769.469,0.268,1150.000,0.265)}
+
+.func Cdg(V) {table(V,0.010,2.432,0.015,2.415,0.022,2.402,0.033,2.374,0.050,2.338,0.075,2.304,0.111,2.228,0.167,2.131,0.249,1.999,0.372,1.816,0.556,1.631,0.831,1.454,1.242,1.274,1.856,1.082,2.774,0.891,4.146,0.714,6.196,0.542,9.260,0.278,13.840,0.087,20.684,0.069,30.913,0.051,46.200,0.042,69.048,0.035,103.195,0.030,154.228,0.027,230.500,0.023,344.491,0.021,514.854,0.018,769.469,0.018,1150.000,0.018)}
+
+.func Cgs(V) {table(V,-5.000,8.830,-4.750,8.114,-4.500,7.543,-4.250,7.119,-4.000,7.000,-3.750,6.992,-3.500,7.000,-3.250,7.013,-3.000,7.036,-2.750,7.066,-2.500,7.105,-2.250,7.157,-2.000,7.215,-1.750,7.283,-1.500,7.360,-1.250,7.447,-1.000,7.574,-0.750,7.806,-0.500,8.165,-0.250,8.545,0.000,8.957,0.250,9.281,0.500,9.600,0.750,9.861,1.000,10.080,1.250,10.289,1.500,10.506,1.750,10.677,2.000,10.825,2.250,10.914,2.500,10.997,2.750,11.054,3.000,11.101,3.250,11.139,3.500,11.170,3.750,11.198,4.000,11.218,4.250,11.240,4.500,11.258,4.750,11.274,5.000,11.289,6.000,11.338,7.000,11.376,8.000,11.409,9.000,11.436,10.000,11.461,11.000,11.484,12.000,11.503,13.000,11.522,14.000,11.538,15.000,11.555)}
+
+
+.ENDS 33
+
+.SUBCKT 41 D G S Tj Id
+*** Forward Conduction Model ***
+Gds D s2 Value {V(Fwd)}
+Eds Fwd 0 Value {AF*IdFwd(V(D,s2),V(G,S)+Vths+VthFwd(V(Tj)))}
+GRds s2 S Value {V(s2,S)/((Rdss + RTJ(V(Tj)))/AF)}
+R1 s2 S 1k
+Rbypass D S 1G
+
+.func IdFwd(Vds,Vgs) {a(Vgs)*atan(b(Vgs)*max(Vds,0)) + c(Vgs)*Vds + b(Vgs)*a(Vgs)*min(Vds,0)}
+
+ECurr Id 0 Value {abs(I(Rbd)) + abs(V(Fwd))}
+DBD S d2 IdealDiode
+Rbd d2 D {Rs_ideal/(2*AF)}
+.model IdealDiode D(level=1 Is={AF*Is_ideal} N={n_ideal/((TEMP+273.15)*(0.026/(27+273.15)))} Rs={Rs_ideal/(2*AF)} Tnom={TEMP})
+*** CV Model ***
+
+G_cdg    D    G    Value {(AF*(agd*1e-9*Cdg(V(D,G))+{Cgd_Module}))*ddt(V(D,G))}
+G_cds    d2   S    Value {AF*ads*1e-9*Cds(V(d2,S))*ddt(V(d2,S))}
+G_cgs    G    S    Value {AF*ags*1e-9*Cgs(V(G,S))*ddt(V(G,S))}
+
+**********************************************************************
+********************** Models and Parameters ***********************
+**********************************************************************
+
+
+
+*** Forward Conduction Parameters ***
+.func a(Vgs) {table(Vgs,0,8.3333e-10,0.5,1.5325e-08,1,2.8183e-07,1.5,5.183e-06,2,9.5316e-05,2.5,0.0017529,3,0.032236,3.5,0.59282,4,1.4455,4.5,2.9798,5,5.5026,5.5,9.3723,6,14.9153,6.5,22.4903,7,32.4613,7.5,45.0713,8,60.189,8.5,77.9861,9,98.3473,9.5,121.4111,10,146.6415,10.5,172.6025,11,197.2541,11.5,222.4276,12,243.612,12.5,262.3559,13,276.4064,13.5,287.7409,14,293.5036,14.5,299.7736,15,304.6624,15.5,311.1456,16,318.6671,16.5,327.795,17,335.9158,17.5,343.7397,18,350.7224)}
+.func b(Vgs) {table(Vgs,0,1,0.5,1,1,1,1.5,1,2,1,2.5,1,3,1,3.5,1,4,1,4.5,1,5,0.99157,5.5,0.96229,6,0.9167,6.5,0.85375,7,0.77602,7.5,0.69397,8,0.6259,8.5,0.56501,9,0.51347,9.5,0.46848,10,0.43001,10.5,0.39635,11,0.37223,11.5,0.35172,12,0.34449,12.5,0.34376,13,0.35337,13.5,0.36967,14,0.39912,14.5,0.42351,15,0.44765,15.5,0.46349,16,0.47225,16.5,0.47225,17,0.47225,17.5,0.47225,18,0.47225)}
+.func c(Vgs) {table(Vgs,0,0,0.5,0,1,0,1.5,0,2,0,2.5,0.00010739,3,0.00043573,3.5,0.00086808,4,0.0018669,4.5,0.0046052,5,0.0096418,5.5,0.018003,6,0.030643,6.5,0.048686,7,0.072946,7.5,0.10226,8,0.14342,8.5,0.19774,9,0.27447,9.5,0.36589,10,0.48619,10.5,0.68786,11,1.06,11.5,1.4587,12,1.9086,12.5,2.3365,13,2.6675,13.5,2.8135,14,2.9046,14.5,2.9217,15,2.9246,15.5,2.9275,16,2.9275,16.5,2.9275,17,2.9275,17.5,2.9275,18,2.9275)}
+.func RTJ(Tj) {table(Tj,25,0.0043571,50,0.0053789,75,0.0065571,100,0.0085957,125,0.0097992,150,0.01194,175,0.014087)}
+.func VthFwd(Tj) {table(Tj,25,-1.0782,50,-0.71771,75,-0.41592,100,0,125,0.087216,150,0.383,175,0.62568)}
+
+
+*** Reverse Conduction Parameters ***
+.param Is=10.00m
+.func RdBD(Tj) {table(Tj,25,0.0055196,50,0.0028724,75,0.00083375,100,0,125,-0.0004424,150,0.00096691,175,0.0029635)}
+.func VthBD(Tj) {table(Tj,25,-0.18464,50,-0.1006,75,-0.047086,100,0,125,0.18382,150,0.47054,175,0.77732)}
+
+*** Device Capacitance Values ***
+.func Cds(V) {table(V,0.010,5.458,0.015,5.451,0.022,5.440,0.033,5.449,0.050,5.424,0.075,5.403,0.111,5.364,0.167,5.326,0.249,5.247,0.372,5.160,0.556,5.025,0.831,4.855,1.242,4.635,1.856,4.355,2.774,4.027,4.146,3.655,6.196,3.250,9.260,2.646,13.840,1.988,20.684,1.597,30.913,1.239,46.200,0.989,69.048,0.800,103.195,0.652,154.228,0.534,230.500,0.438,344.491,0.361,514.854,0.299,769.469,0.268,1150.000,0.265)}
+
+.func Cdg(V) {table(V,0.010,2.432,0.015,2.415,0.022,2.402,0.033,2.374,0.050,2.338,0.075,2.304,0.111,2.228,0.167,2.131,0.249,1.999,0.372,1.816,0.556,1.631,0.831,1.454,1.242,1.274,1.856,1.082,2.774,0.891,4.146,0.714,6.196,0.542,9.260,0.278,13.840,0.087,20.684,0.069,30.913,0.051,46.200,0.042,69.048,0.035,103.195,0.030,154.228,0.027,230.500,0.023,344.491,0.021,514.854,0.018,769.469,0.018,1150.000,0.018)}
+
+.func Cgs(V) {table(V,-5.000,8.830,-4.750,8.114,-4.500,7.543,-4.250,7.119,-4.000,7.000,-3.750,6.992,-3.500,7.000,-3.250,7.013,-3.000,7.036,-2.750,7.066,-2.500,7.105,-2.250,7.157,-2.000,7.215,-1.750,7.283,-1.500,7.360,-1.250,7.447,-1.000,7.574,-0.750,7.806,-0.500,8.165,-0.250,8.545,0.000,8.957,0.250,9.281,0.500,9.600,0.750,9.861,1.000,10.080,1.250,10.289,1.500,10.506,1.750,10.677,2.000,10.825,2.250,10.914,2.500,10.997,2.750,11.054,3.000,11.101,3.250,11.139,3.500,11.170,3.750,11.198,4.000,11.218,4.250,11.240,4.500,11.258,4.750,11.274,5.000,11.289,6.000,11.338,7.000,11.376,8.000,11.409,9.000,11.436,10.000,11.461,11.000,11.484,12.000,11.503,13.000,11.522,14.000,11.538,15.000,11.555)}
+
+
+.param Is_ideal=1.000000e-02
+.param n_ideal=5.151010e-01
+.param Rs_ideal=8.170764e-03
+.ENDS 41
+
+.SUBCKT 42 D G S Tj Id
+*** Forward Conduction Model ***
+Gds D s2 Value {V(Fwd)}
+Eds Fwd 0 Value {AF*IdFwd(V(D,s2),V(G,S)+Vths+VthFwd(V(Tj)))}
+GRds s2 S Value {V(s2,S)/((Rdss + RTJ(V(Tj)))/AF)}
+R1 s2 S 1k
+Rbypass D S 1G
+
+.func IdFwd(Vds,Vgs) {a(Vgs)*atan(b(Vgs)*max(Vds,0)) + c(Vgs)*Vds + b(Vgs)*a(Vgs)*min(Vds,0)}
+
+ECurr Id 0 Value {abs(V(Rev)) + abs(V(Fwd))}
+*** Third Quadrant [Without RR] ***
+GRbd D d2 Value {V(D,d2)/((RdBD(V(Tj))+Rs(V(G,S)+VthBD(V(Tj))))/(AF))}
+R2 D d2 1k
+GTQ S d2 Value {V(Rev)}
+ETQ Rev 0 Value {AF*min(Is*(-1+exp(max(V(S,d2),-1n)/(nn(V(G,S)+VthBD(V(Tj)))))),1e6)}
+
+*** CV Model ***
+
+G_cdg    D    G    Value {(AF*(agd*1e-9*Cdg(V(D,G))+{Cgd_Module}))*ddt(V(D,G))}
+G_cds    d2   S    Value {AF*ads*1e-9*Cds(V(d2,S))*ddt(V(d2,S))}
+G_cgs    G    S    Value {AF*ags*1e-9*Cgs(V(G,S))*ddt(V(G,S))}
+
+**********************************************************************
+********************** Models and Parameters ***********************
+**********************************************************************
+
+
+
+*** Forward Conduction Parameters ***
+.func a(Vgs) {table(Vgs,0,8.3333e-10,0.5,1.5325e-08,1,2.8183e-07,1.5,5.183e-06,2,9.5316e-05,2.5,0.0017529,3,0.032236,3.5,0.59282,4,1.4455,4.5,2.9798,5,5.5026,5.5,9.3723,6,14.9153,6.5,22.4903,7,32.4613,7.5,45.0713,8,60.189,8.5,77.9861,9,98.3473,9.5,121.4111,10,146.6415,10.5,172.6025,11,197.2541,11.5,222.4276,12,243.612,12.5,262.3559,13,276.4064,13.5,287.7409,14,293.5036,14.5,299.7736,15,304.6624,15.5,311.1456,16,318.6671,16.5,327.795,17,335.9158,17.5,343.7397,18,350.7224)}
+.func b(Vgs) {table(Vgs,0,1,0.5,1,1,1,1.5,1,2,1,2.5,1,3,1,3.5,1,4,1,4.5,1,5,0.99157,5.5,0.96229,6,0.9167,6.5,0.85375,7,0.77602,7.5,0.69397,8,0.6259,8.5,0.56501,9,0.51347,9.5,0.46848,10,0.43001,10.5,0.39635,11,0.37223,11.5,0.35172,12,0.34449,12.5,0.34376,13,0.35337,13.5,0.36967,14,0.39912,14.5,0.42351,15,0.44765,15.5,0.46349,16,0.47225,16.5,0.47225,17,0.47225,17.5,0.47225,18,0.47225)}
+.func c(Vgs) {table(Vgs,0,0,0.5,0,1,0,1.5,0,2,0,2.5,0.00010739,3,0.00043573,3.5,0.00086808,4,0.0018669,4.5,0.0046052,5,0.0096418,5.5,0.018003,6,0.030643,6.5,0.048686,7,0.072946,7.5,0.10226,8,0.14342,8.5,0.19774,9,0.27447,9.5,0.36589,10,0.48619,10.5,0.68786,11,1.06,11.5,1.4587,12,1.9086,12.5,2.3365,13,2.6675,13.5,2.8135,14,2.9046,14.5,2.9217,15,2.9246,15.5,2.9275,16,2.9275,16.5,2.9275,17,2.9275,17.5,2.9275,18,2.9275)}
+.func RTJ(Tj) {table(Tj,25,0.0043571,50,0.0053789,75,0.0065571,100,0.0085957,125,0.0097992,150,0.01194,175,0.014087)}
+.func VthFwd(Tj) {table(Tj,25,-1.0782,50,-0.71771,75,-0.41592,100,0,125,0.087216,150,0.383,175,0.62568)}
+
+
+*** Reverse Conduction Parameters ***
+.func nn(Vgs) {table(Vgs,-5,0.5151,-4,0.4925,-3,0.46092,-2,0.41801,-1,0.36408,0,0.30469,1,0.24985,2,0.20181,3,0.15969,4,0.1309,5,0.1094,6,0.10065,7,0.1,8,0.1,9,0.1,10,0.1,11,0.1,12,0.1,13,0.1,14,0.2301,15,0.44619,16,0.73689,17,1.0564,18,1.3493)}
+.func Rs(Vgs) {table(Vgs,-5,0.0081708,-4,0.008479,-3,0.0093303,-2,0.010921,-1,0.013352,0,0.016093,1,0.018133,2,0.019327,3,0.019937,4,0.020199,5,0.021836,6,0.025233,7,0.030984,8,0.03902,9,0.05018,10,0.064795,11,0.078798,12,0.10043,13,0.16754,14,0.68306,15,2.3679,16,6.93,17,17.0498,18,35.2814)}
+.param Is=10.00m
+.func RdBD(Tj) {table(Tj,25,0.0055196,50,0.0028724,75,0.00083375,100,0,125,-0.0004424,150,0.00096691,175,0.0029635)}
+.func VthBD(Tj) {table(Tj,25,-0.18464,50,-0.1006,75,-0.047086,100,0,125,0.18382,150,0.47054,175,0.77732)}
+
+*** Device Capacitance Values ***
+.func Cds(V) {table(V,0.010,5.458,0.015,5.451,0.022,5.440,0.033,5.449,0.050,5.424,0.075,5.403,0.111,5.364,0.167,5.326,0.249,5.247,0.372,5.160,0.556,5.025,0.831,4.855,1.242,4.635,1.856,4.355,2.774,4.027,4.146,3.655,6.196,3.250,9.260,2.646,13.840,1.988,20.684,1.597,30.913,1.239,46.200,0.989,69.048,0.800,103.195,0.652,154.228,0.534,230.500,0.438,344.491,0.361,514.854,0.299,769.469,0.268,1150.000,0.265)}
+
+.func Cdg(V) {table(V,0.010,2.432,0.015,2.415,0.022,2.402,0.033,2.374,0.050,2.338,0.075,2.304,0.111,2.228,0.167,2.131,0.249,1.999,0.372,1.816,0.556,1.631,0.831,1.454,1.242,1.274,1.856,1.082,2.774,0.891,4.146,0.714,6.196,0.542,9.260,0.278,13.840,0.087,20.684,0.069,30.913,0.051,46.200,0.042,69.048,0.035,103.195,0.030,154.228,0.027,230.500,0.023,344.491,0.021,514.854,0.018,769.469,0.018,1150.000,0.018)}
+
+.func Cgs(V) {table(V,-5.000,8.830,-4.750,8.114,-4.500,7.543,-4.250,7.119,-4.000,7.000,-3.750,6.992,-3.500,7.000,-3.250,7.013,-3.000,7.036,-2.750,7.066,-2.500,7.105,-2.250,7.157,-2.000,7.215,-1.750,7.283,-1.500,7.360,-1.250,7.447,-1.000,7.574,-0.750,7.806,-0.500,8.165,-0.250,8.545,0.000,8.957,0.250,9.281,0.500,9.600,0.750,9.861,1.000,10.080,1.250,10.289,1.500,10.506,1.750,10.677,2.000,10.825,2.250,10.914,2.500,10.997,2.750,11.054,3.000,11.101,3.250,11.139,3.500,11.170,3.750,11.198,4.000,11.218,4.250,11.240,4.500,11.258,4.750,11.274,5.000,11.289,6.000,11.338,7.000,11.376,8.000,11.409,9.000,11.436,10.000,11.461,11.000,11.484,12.000,11.503,13.000,11.522,14.000,11.538,15.000,11.555)}
+
+
+.ENDS 42
+
+.SUBCKT 43 D G S Tj Id
+*** Forward Conduction Model ***
+Gds D s2 Value {V(Fwd)}
+Eds Fwd 0 Value {AF*IdFwd(V(D,s2),V(G,S)+Vths+VthFwd(V(Tj)))}
+GRds s2 S Value {V(s2,S)/((Rdss + RTJ(V(Tj)))/AF)}
+R1 s2 S 1k
+Rbypass D S 1G
+
+.func IdFwd(Vds,Vgs) {a(Vgs)*atan(b(Vgs)*max(Vds,0)) + c(Vgs)*Vds + b(Vgs)*a(Vgs)*min(Vds,0)}
+
+ECurr Id 0 Value {abs(V(Rev)) + abs(V(Fwd))}
+*** Third Quadrant [With RR] ***
+GRbd D d2 Value {V(D,d2)/((RdBD(V(Tj))+Rs(V(G,S)+VthBD(V(Tj))))/(AF))}
+R2 D d2 1k
+GI1 0 qm Value {-1/tau(V(Tj))*V(qm)+V(qe,qm)/TM(V(Tj))}
+EV1 qe 0 Value {min((1+TM(V(Tj))/tau(V(Tj)))*Is*tau(V(Tj))*(-1+exp(max(V(S,d2),-1n)/(nn(V(G,S)+VthBD(V(Tj)))))),1e6)}
+GITQ S d2 Value {V(Rev)}
+EITQ Rev 0 Value {AF*V(qe,qm)/TM(V(Tj))}
+C1 qm 0 1
+R3 qm 0 100G
+.func tau(Tj) {1e-9*table(Tj,25,tau1,175,tau2)}
+.func TM(Tj) {1e-9*table(Tj,25,tm1,175,tm2)}
+
+*** CV Model ***
+
+G_cdg    D    G    Value {(AF*(agd*1e-9*Cdg(V(D,G))+{Cgd_Module}))*ddt(V(D,G))}
+G_cds    d2   S    Value {AF*ads*1e-9*Cds(V(d2,S))*ddt(V(d2,S))}
+G_cgs    G    S    Value {AF*ags*1e-9*Cgs(V(G,S))*ddt(V(G,S))}
+
+**********************************************************************
+********************** Models and Parameters ***********************
+**********************************************************************
+
+
+
+*** Forward Conduction Parameters ***
+.func a(Vgs) {table(Vgs,0,8.3333e-10,0.5,1.5325e-08,1,2.8183e-07,1.5,5.183e-06,2,9.5316e-05,2.5,0.0017529,3,0.032236,3.5,0.59282,4,1.4455,4.5,2.9798,5,5.5026,5.5,9.3723,6,14.9153,6.5,22.4903,7,32.4613,7.5,45.0713,8,60.189,8.5,77.9861,9,98.3473,9.5,121.4111,10,146.6415,10.5,172.6025,11,197.2541,11.5,222.4276,12,243.612,12.5,262.3559,13,276.4064,13.5,287.7409,14,293.5036,14.5,299.7736,15,304.6624,15.5,311.1456,16,318.6671,16.5,327.795,17,335.9158,17.5,343.7397,18,350.7224)}
+.func b(Vgs) {table(Vgs,0,1,0.5,1,1,1,1.5,1,2,1,2.5,1,3,1,3.5,1,4,1,4.5,1,5,0.99157,5.5,0.96229,6,0.9167,6.5,0.85375,7,0.77602,7.5,0.69397,8,0.6259,8.5,0.56501,9,0.51347,9.5,0.46848,10,0.43001,10.5,0.39635,11,0.37223,11.5,0.35172,12,0.34449,12.5,0.34376,13,0.35337,13.5,0.36967,14,0.39912,14.5,0.42351,15,0.44765,15.5,0.46349,16,0.47225,16.5,0.47225,17,0.47225,17.5,0.47225,18,0.47225)}
+.func c(Vgs) {table(Vgs,0,0,0.5,0,1,0,1.5,0,2,0,2.5,0.00010739,3,0.00043573,3.5,0.00086808,4,0.0018669,4.5,0.0046052,5,0.0096418,5.5,0.018003,6,0.030643,6.5,0.048686,7,0.072946,7.5,0.10226,8,0.14342,8.5,0.19774,9,0.27447,9.5,0.36589,10,0.48619,10.5,0.68786,11,1.06,11.5,1.4587,12,1.9086,12.5,2.3365,13,2.6675,13.5,2.8135,14,2.9046,14.5,2.9217,15,2.9246,15.5,2.9275,16,2.9275,16.5,2.9275,17,2.9275,17.5,2.9275,18,2.9275)}
+.func RTJ(Tj) {table(Tj,25,0.0043571,50,0.0053789,75,0.0065571,100,0.0085957,125,0.0097992,150,0.01194,175,0.014087)}
+.func VthFwd(Tj) {table(Tj,25,-1.0782,50,-0.71771,75,-0.41592,100,0,125,0.087216,150,0.383,175,0.62568)}
+
+
+*** Reverse Conduction Parameters ***
+.func nn(Vgs) {table(Vgs,-5,0.5151,-4,0.4925,-3,0.46092,-2,0.41801,-1,0.36408,0,0.30469,1,0.24985,2,0.20181,3,0.15969,4,0.1309,5,0.1094,6,0.10065,7,0.1,8,0.1,9,0.1,10,0.1,11,0.1,12,0.1,13,0.1,14,0.2301,15,0.44619,16,0.73689,17,1.0564,18,1.3493)}
+.func Rs(Vgs) {table(Vgs,-5,0.0081708,-4,0.008479,-3,0.0093303,-2,0.010921,-1,0.013352,0,0.016093,1,0.018133,2,0.019327,3,0.019937,4,0.020199,5,0.021836,6,0.025233,7,0.030984,8,0.03902,9,0.05018,10,0.064795,11,0.078798,12,0.10043,13,0.16754,14,0.68306,15,2.3679,16,6.93,17,17.0498,18,35.2814)}
+.param Is=10.00m
+.func RdBD(Tj) {table(Tj,25,0.0055196,50,0.0028724,75,0.00083375,100,0,125,-0.0004424,150,0.00096691,175,0.0029635)}
+.func VthBD(Tj) {table(Tj,25,-0.18464,50,-0.1006,75,-0.047086,100,0,125,0.18382,150,0.47054,175,0.77732)}
+
+*** Device Capacitance Values ***
+.func Cds(V) {table(V,0.010,5.458,0.015,5.451,0.022,5.440,0.033,5.449,0.050,5.424,0.075,5.403,0.111,5.364,0.167,5.326,0.249,5.247,0.372,5.160,0.556,5.025,0.831,4.855,1.242,4.635,1.856,4.355,2.774,4.027,4.146,3.655,6.196,3.250,9.260,2.646,13.840,1.988,20.684,1.597,30.913,1.239,46.200,0.989,69.048,0.800,103.195,0.652,154.228,0.534,230.500,0.438,344.491,0.361,514.854,0.299,769.469,0.268,1150.000,0.265)}
+
+.func Cdg(V) {table(V,0.010,2.432,0.015,2.415,0.022,2.402,0.033,2.374,0.050,2.338,0.075,2.304,0.111,2.228,0.167,2.131,0.249,1.999,0.372,1.816,0.556,1.631,0.831,1.454,1.242,1.274,1.856,1.082,2.774,0.891,4.146,0.714,6.196,0.542,9.260,0.278,13.840,0.087,20.684,0.069,30.913,0.051,46.200,0.042,69.048,0.035,103.195,0.030,154.228,0.027,230.500,0.023,344.491,0.021,514.854,0.018,769.469,0.018,1150.000,0.018)}
+
+.func Cgs(V) {table(V,-5.000,8.830,-4.750,8.114,-4.500,7.543,-4.250,7.119,-4.000,7.000,-3.750,6.992,-3.500,7.000,-3.250,7.013,-3.000,7.036,-2.750,7.066,-2.500,7.105,-2.250,7.157,-2.000,7.215,-1.750,7.283,-1.500,7.360,-1.250,7.447,-1.000,7.574,-0.750,7.806,-0.500,8.165,-0.250,8.545,0.000,8.957,0.250,9.281,0.500,9.600,0.750,9.861,1.000,10.080,1.250,10.289,1.500,10.506,1.750,10.677,2.000,10.825,2.250,10.914,2.500,10.997,2.750,11.054,3.000,11.101,3.250,11.139,3.500,11.170,3.750,11.198,4.000,11.218,4.250,11.240,4.500,11.258,4.750,11.274,5.000,11.289,6.000,11.338,7.000,11.376,8.000,11.409,9.000,11.436,10.000,11.461,11.000,11.484,12.000,11.503,13.000,11.522,14.000,11.538,15.000,11.555)}
+
+
+.ENDS 43
+
+.SUBCKT 51 D G S Tj Id
+*** Forward Conduction Model ***
+Gds D s2 Value {V(Fwd)}
+Eds Fwd 0 Value {AF*IdFwd(V(D,s2),V(G,S)+Vths+VthFwd(V(Tj)))}
+GRds s2 S Value {V(s2,S)/((Rdss + RTJ(V(Tj)))/AF)}
+R1 s2 S 1k
+Rbypass D S 1G
+
+.func IdFwd(Vds,Vgs) {a(Vgs)*atan(b(Vgs)*max(Vds,0)) + c(Vgs)*Vds + b(Vgs)*a(Vgs)*min(Vds,0)}
+
+ECurr Id 0 Value {abs(I(Rbd)) + abs(V(Fwd))}
+DBD S d2 IdealDiode
+Rbd d2 D {Rs_ideal/(2*AF)}
+.model IdealDiode D(level=1 Is={AF*Is_ideal} N={n_ideal/((TEMP+273.15)*(0.026/(27+273.15)))} Rs={Rs_ideal/(2*AF)} Tnom={TEMP})
+*** CV Model ***
+
+G_cdg    D    G    Value {(AF*(agd*1e-9*Cdg(V(D,G))+{Cgd_Module}))*ddt(V(D,G))}
+G_cds    d2   S    Value {AF*ads*1e-9*Cds(V(d2,S))*ddt(V(d2,S))}
+G_cgs    G    S    Value {AF*ags*1e-9*Cgs(V(G,S))*ddt(V(G,S))}
+
+**********************************************************************
+********************** Models and Parameters ***********************
+**********************************************************************
+
+
+
+*** Forward Conduction Parameters ***
+.func a(Vgs) {table(Vgs,0,8.3333e-10,0.5,1.2982e-08,1,2.0225e-07,1.5,3.1509e-06,2,4.9088e-05,2.5,0.00076474,3,0.011914,3.5,0.18561,4,0.50404,4.5,1.1409,5,2.2481,5.5,4.0563,6,6.8063,6.5,10.7047,7,16.0049,7.5,22.9126,8,31.5494,8.5,42.1912,9,54.5122,9.5,68.3968,10,83.9085,10.5,100.863,11,118.5175,11.5,138.0199,12,156.6829,12.5,174.6557,13,188.7209,13.5,199.0491,14,207.3123,14.5,214.8556,15,221.8959,15.5,231.4017,16,243.1555,16.5,254.6916,17,266.8902,17.5,278.88,18,291.1328)}
+.func b(Vgs) {table(Vgs,0,1,0.5,1,1,1,1.5,1,2,1,2.5,1,3,1,3.5,1,4,1,4.5,1,5,0.99444,5.5,0.97144,6,0.92724,6.5,0.87108,7,0.80127,7.5,0.72678,8,0.66109,8.5,0.60486,9,0.55937,9.5,0.52537,10,0.4975,10.5,0.47419,11,0.45986,11.5,0.44017,12,0.42806,12.5,0.42272,13,0.43658,13.5,0.47079,14,0.50976,14.5,0.54333,15,0.57421,15.5,0.58998,16,0.58815,16.5,0.58815,17,0.58815,17.5,0.58815,18,0.58815)}
+.func c(Vgs) {table(Vgs,0,0,0.5,0,1,0,1.5,0,2,0,2.5,7.9266e-05,3,0.00015974,3.5,0.00034964,4,0.00074732,4.5,0.001529,5,0.0027841,5.5,0.0047254,6,0.0072501,6.5,0.01119,7,0.017804,7.5,0.026934,8,0.040122,8.5,0.054771,9,0.078503,9.5,0.11588,10,0.16675,10.5,0.24128,11,0.36574,11.5,0.49263,12,0.62081,12.5,0.73562,13,0.82612,13.5,0.8652,14,0.89199,14.5,0.90079,15,0.90638,15.5,0.90789,16,0.90873,16.5,0.90873,17,0.90873,17.5,0.90873,18,0.90873)}
+.func RTJ(Tj) {table(Tj,25,0.011914,50,0.013392,75,0.015404,100,0.019593,125,0.021344,150,0.025398,175,0.030352)}
+.func VthFwd(Tj) {table(Tj,25,-0.68954,50,-0.53558,75,-0.3551,100,0,125,-0.023907,150,0.14995,175,0.30031)}
+
+
+*** Reverse Conduction Parameters ***
+.param Is=10.00m
+.func RdBD(Tj) {table(Tj,25,-0.0012267,50,-0.0014372,75,-0.0012316,100,0,125,-0.00015299,150,0.0013519,175,0.003292)}
+.func VthBD(Tj) {table(Tj,25,-2,50,-2,75,-1.5378,100,0,125,-0.41217,150,0.54099,175,1.3347)}
+
+*** Device Capacitance Values ***
+.func Cds(V) {table(V,0.010,3.116,0.015,3.118,0.022,3.119,0.033,3.114,0.050,3.106,0.075,3.092,0.111,3.070,0.167,3.054,0.249,3.015,0.372,2.962,0.556,2.894,0.831,2.805,1.242,2.682,1.856,2.525,2.774,2.338,4.146,2.127,6.196,1.883,9.260,1.588,13.840,1.153,20.684,0.919,30.913,0.714,46.200,0.574,69.048,0.468,103.195,0.382,154.228,0.313,230.500,0.257,344.491,0.212,514.854,0.176,769.469,0.170,1150.000,0.167)}
+
+.func Cdg(V) {table(V,0.010,1.564,0.015,1.564,0.022,1.555,0.033,1.540,0.050,1.526,0.075,1.497,0.111,1.454,0.167,1.394,0.249,1.312,0.372,1.207,0.556,1.094,0.831,0.985,1.242,0.873,1.856,0.748,2.774,0.625,4.146,0.510,6.196,0.399,9.260,0.283,13.840,0.068,20.684,0.051,30.913,0.036,46.200,0.029,69.048,0.024,103.195,0.021,154.228,0.018,230.500,0.015,344.491,0.013,514.854,0.012,769.469,0.012,1150.000,0.012)}
+
+.func Cgs(V) {table(V,-5.000,5.298,-4.750,4.915,-4.500,4.606,-4.250,4.336,-4.000,4.221,-3.750,4.196,-3.500,4.201,-3.250,4.212,-3.000,4.228,-2.750,4.249,-2.500,4.277,-2.250,4.312,-2.000,4.347,-1.750,4.383,-1.500,4.425,-1.250,4.481,-1.000,4.568,-0.750,4.705,-0.500,4.907,-0.250,5.158,0.000,5.411,0.250,5.637,0.500,5.828,0.750,5.979,1.000,6.117,1.250,6.239,1.500,6.355,1.750,6.465,2.000,6.566,2.250,6.642,2.500,6.708,2.750,6.754,3.000,6.793,3.250,6.820,3.500,6.845,3.750,6.864,4.000,6.881,4.250,6.893,4.500,6.905,4.750,6.915,5.000,6.924,6.000,6.954,7.000,6.976,8.000,6.993,9.000,7.008,10.000,7.020,11.000,7.031,12.000,7.042,13.000,7.051,14.000,7.060,15.000,7.068)}
+
+
+.param Is_ideal=1.000000e-02
+.param n_ideal=5.741817e-01
+.param Rs_ideal=1.100583e-02
+.ENDS 51
+
+.SUBCKT 52 D G S Tj Id
+*** Forward Conduction Model ***
+Gds D s2 Value {V(Fwd)}
+Eds Fwd 0 Value {AF*IdFwd(V(D,s2),V(G,S)+Vths+VthFwd(V(Tj)))}
+GRds s2 S Value {V(s2,S)/((Rdss + RTJ(V(Tj)))/AF)}
+R1 s2 S 1k
+Rbypass D S 1G
+
+.func IdFwd(Vds,Vgs) {a(Vgs)*atan(b(Vgs)*max(Vds,0)) + c(Vgs)*Vds + b(Vgs)*a(Vgs)*min(Vds,0)}
+
+ECurr Id 0 Value {abs(V(Rev)) + abs(V(Fwd))}
+*** Third Quadrant [Without RR] ***
+GRbd D d2 Value {V(D,d2)/((RdBD(V(Tj))+Rs(V(G,S)+VthBD(V(Tj))))/(AF))}
+R2 D d2 1k
+GTQ S d2 Value {V(Rev)}
+ETQ Rev 0 Value {AF*min(Is*(-1+exp(max(V(S,d2),-1n)/(nn(V(G,S)+VthBD(V(Tj)))))),1e6)}
+
+*** CV Model ***
+
+G_cdg    D    G    Value {(AF*(agd*1e-9*Cdg(V(D,G))+{Cgd_Module}))*ddt(V(D,G))}
+G_cds    d2   S    Value {AF*ads*1e-9*Cds(V(d2,S))*ddt(V(d2,S))}
+G_cgs    G    S    Value {AF*ags*1e-9*Cgs(V(G,S))*ddt(V(G,S))}
+
+**********************************************************************
+********************** Models and Parameters ***********************
+**********************************************************************
+
+
+
+*** Forward Conduction Parameters ***
+.func a(Vgs) {table(Vgs,0,8.3333e-10,0.5,1.2982e-08,1,2.0225e-07,1.5,3.1509e-06,2,4.9088e-05,2.5,0.00076474,3,0.011914,3.5,0.18561,4,0.50404,4.5,1.1409,5,2.2481,5.5,4.0563,6,6.8063,6.5,10.7047,7,16.0049,7.5,22.9126,8,31.5494,8.5,42.1912,9,54.5122,9.5,68.3968,10,83.9085,10.5,100.863,11,118.5175,11.5,138.0199,12,156.6829,12.5,174.6557,13,188.7209,13.5,199.0491,14,207.3123,14.5,214.8556,15,221.8959,15.5,231.4017,16,243.1555,16.5,254.6916,17,266.8902,17.5,278.88,18,291.1328)}
+.func b(Vgs) {table(Vgs,0,1,0.5,1,1,1,1.5,1,2,1,2.5,1,3,1,3.5,1,4,1,4.5,1,5,0.99444,5.5,0.97144,6,0.92724,6.5,0.87108,7,0.80127,7.5,0.72678,8,0.66109,8.5,0.60486,9,0.55937,9.5,0.52537,10,0.4975,10.5,0.47419,11,0.45986,11.5,0.44017,12,0.42806,12.5,0.42272,13,0.43658,13.5,0.47079,14,0.50976,14.5,0.54333,15,0.57421,15.5,0.58998,16,0.58815,16.5,0.58815,17,0.58815,17.5,0.58815,18,0.58815)}
+.func c(Vgs) {table(Vgs,0,0,0.5,0,1,0,1.5,0,2,0,2.5,7.9266e-05,3,0.00015974,3.5,0.00034964,4,0.00074732,4.5,0.001529,5,0.0027841,5.5,0.0047254,6,0.0072501,6.5,0.01119,7,0.017804,7.5,0.026934,8,0.040122,8.5,0.054771,9,0.078503,9.5,0.11588,10,0.16675,10.5,0.24128,11,0.36574,11.5,0.49263,12,0.62081,12.5,0.73562,13,0.82612,13.5,0.8652,14,0.89199,14.5,0.90079,15,0.90638,15.5,0.90789,16,0.90873,16.5,0.90873,17,0.90873,17.5,0.90873,18,0.90873)}
+.func RTJ(Tj) {table(Tj,25,0.011914,50,0.013392,75,0.015404,100,0.019593,125,0.021344,150,0.025398,175,0.030352)}
+.func VthFwd(Tj) {table(Tj,25,-0.68954,50,-0.53558,75,-0.3551,100,0,125,-0.023907,150,0.14995,175,0.30031)}
+
+
+*** Reverse Conduction Parameters ***
+.func nn(Vgs) {table(Vgs,-5,0.57418,-4,0.54355,-3,0.50655,-2,0.46138,-1,0.40881,0,0.34976,1,0.29005,2,0.2347,3,0.18579,4,0.14561,5,0.11598,6,0.1,7,0.1,8,0.1,9,0.1,10,0.1,11,0.1,12,0.1,13,0.1,14,0.1,15,0.1,16,0.1,17,0.1,18,0.1)}
+.func Rs(Vgs) {table(Vgs,-5,0.011006,-4,0.011845,-3,0.013196,-2,0.015113,-1,0.017522,0,0.020304,1,0.022925,2,0.025032,3,0.026522,4,0.027836,5,0.029651,6,0.032786,7,0.036827,8,0.042211,9,0.048896,10,0.05702,11,0.066399,12,0.074926,13,0.086419,14,0.11,15,0.13093,16,0.13732,17,0.14343,18,0.1475)}
+.param Is=10.00m
+.func RdBD(Tj) {table(Tj,25,-0.0012267,50,-0.0014372,75,-0.0012316,100,0,125,-0.00015299,150,0.0013519,175,0.003292)}
+.func VthBD(Tj) {table(Tj,25,-2,50,-2,75,-1.5378,100,0,125,-0.41217,150,0.54099,175,1.3347)}
+
+*** Device Capacitance Values ***
+.func Cds(V) {table(V,0.010,3.116,0.015,3.118,0.022,3.119,0.033,3.114,0.050,3.106,0.075,3.092,0.111,3.070,0.167,3.054,0.249,3.015,0.372,2.962,0.556,2.894,0.831,2.805,1.242,2.682,1.856,2.525,2.774,2.338,4.146,2.127,6.196,1.883,9.260,1.588,13.840,1.153,20.684,0.919,30.913,0.714,46.200,0.574,69.048,0.468,103.195,0.382,154.228,0.313,230.500,0.257,344.491,0.212,514.854,0.176,769.469,0.170,1150.000,0.167)}
+
+.func Cdg(V) {table(V,0.010,1.564,0.015,1.564,0.022,1.555,0.033,1.540,0.050,1.526,0.075,1.497,0.111,1.454,0.167,1.394,0.249,1.312,0.372,1.207,0.556,1.094,0.831,0.985,1.242,0.873,1.856,0.748,2.774,0.625,4.146,0.510,6.196,0.399,9.260,0.283,13.840,0.068,20.684,0.051,30.913,0.036,46.200,0.029,69.048,0.024,103.195,0.021,154.228,0.018,230.500,0.015,344.491,0.013,514.854,0.012,769.469,0.012,1150.000,0.012)}
+
+.func Cgs(V) {table(V,-5.000,5.298,-4.750,4.915,-4.500,4.606,-4.250,4.336,-4.000,4.221,-3.750,4.196,-3.500,4.201,-3.250,4.212,-3.000,4.228,-2.750,4.249,-2.500,4.277,-2.250,4.312,-2.000,4.347,-1.750,4.383,-1.500,4.425,-1.250,4.481,-1.000,4.568,-0.750,4.705,-0.500,4.907,-0.250,5.158,0.000,5.411,0.250,5.637,0.500,5.828,0.750,5.979,1.000,6.117,1.250,6.239,1.500,6.355,1.750,6.465,2.000,6.566,2.250,6.642,2.500,6.708,2.750,6.754,3.000,6.793,3.250,6.820,3.500,6.845,3.750,6.864,4.000,6.881,4.250,6.893,4.500,6.905,4.750,6.915,5.000,6.924,6.000,6.954,7.000,6.976,8.000,6.993,9.000,7.008,10.000,7.020,11.000,7.031,12.000,7.042,13.000,7.051,14.000,7.060,15.000,7.068)}
+
+
+.ENDS 52
+
+.SUBCKT 53 D G S Tj Id
+*** Forward Conduction Model ***
+Gds D s2 Value {V(Fwd)}
+Eds Fwd 0 Value {AF*IdFwd(V(D,s2),V(G,S)+Vths+VthFwd(V(Tj)))}
+GRds s2 S Value {V(s2,S)/((Rdss + RTJ(V(Tj)))/AF)}
+R1 s2 S 1k
+Rbypass D S 1G
+
+.func IdFwd(Vds,Vgs) {a(Vgs)*atan(b(Vgs)*max(Vds,0)) + c(Vgs)*Vds + b(Vgs)*a(Vgs)*min(Vds,0)}
+
+ECurr Id 0 Value {abs(V(Rev)) + abs(V(Fwd))}
+*** Third Quadrant [With RR] ***
+GRbd D d2 Value {V(D,d2)/((RdBD(V(Tj))+Rs(V(G,S)+VthBD(V(Tj))))/(AF))}
+R2 D d2 1k
+GI1 0 qm Value {-1/tau(V(Tj))*V(qm)+V(qe,qm)/TM(V(Tj))}
+EV1 qe 0 Value {min((1+TM(V(Tj))/tau(V(Tj)))*Is*tau(V(Tj))*(-1+exp(max(V(S,d2),-1n)/(nn(V(G,S)+VthBD(V(Tj)))))),1e6)}
+GITQ S d2 Value {V(Rev)}
+EITQ Rev 0 Value {AF*V(qe,qm)/TM(V(Tj))}
+C1 qm 0 1
+R3 qm 0 100G
+.func tau(Tj) {1e-9*table(Tj,25,tau1,175,tau2)}
+.func TM(Tj) {1e-9*table(Tj,25,tm1,175,tm2)}
+
+*** CV Model ***
+
+G_cdg    D    G    Value {(AF*(agd*1e-9*Cdg(V(D,G))+{Cgd_Module}))*ddt(V(D,G))}
+G_cds    d2   S    Value {AF*ads*1e-9*Cds(V(d2,S))*ddt(V(d2,S))}
+G_cgs    G    S    Value {AF*ags*1e-9*Cgs(V(G,S))*ddt(V(G,S))}
+
+**********************************************************************
+********************** Models and Parameters ***********************
+**********************************************************************
+
+
+
+*** Forward Conduction Parameters ***
+.func a(Vgs) {table(Vgs,0,8.3333e-10,0.5,1.2982e-08,1,2.0225e-07,1.5,3.1509e-06,2,4.9088e-05,2.5,0.00076474,3,0.011914,3.5,0.18561,4,0.50404,4.5,1.1409,5,2.2481,5.5,4.0563,6,6.8063,6.5,10.7047,7,16.0049,7.5,22.9126,8,31.5494,8.5,42.1912,9,54.5122,9.5,68.3968,10,83.9085,10.5,100.863,11,118.5175,11.5,138.0199,12,156.6829,12.5,174.6557,13,188.7209,13.5,199.0491,14,207.3123,14.5,214.8556,15,221.8959,15.5,231.4017,16,243.1555,16.5,254.6916,17,266.8902,17.5,278.88,18,291.1328)}
+.func b(Vgs) {table(Vgs,0,1,0.5,1,1,1,1.5,1,2,1,2.5,1,3,1,3.5,1,4,1,4.5,1,5,0.99444,5.5,0.97144,6,0.92724,6.5,0.87108,7,0.80127,7.5,0.72678,8,0.66109,8.5,0.60486,9,0.55937,9.5,0.52537,10,0.4975,10.5,0.47419,11,0.45986,11.5,0.44017,12,0.42806,12.5,0.42272,13,0.43658,13.5,0.47079,14,0.50976,14.5,0.54333,15,0.57421,15.5,0.58998,16,0.58815,16.5,0.58815,17,0.58815,17.5,0.58815,18,0.58815)}
+.func c(Vgs) {table(Vgs,0,0,0.5,0,1,0,1.5,0,2,0,2.5,7.9266e-05,3,0.00015974,3.5,0.00034964,4,0.00074732,4.5,0.001529,5,0.0027841,5.5,0.0047254,6,0.0072501,6.5,0.01119,7,0.017804,7.5,0.026934,8,0.040122,8.5,0.054771,9,0.078503,9.5,0.11588,10,0.16675,10.5,0.24128,11,0.36574,11.5,0.49263,12,0.62081,12.5,0.73562,13,0.82612,13.5,0.8652,14,0.89199,14.5,0.90079,15,0.90638,15.5,0.90789,16,0.90873,16.5,0.90873,17,0.90873,17.5,0.90873,18,0.90873)}
+.func RTJ(Tj) {table(Tj,25,0.011914,50,0.013392,75,0.015404,100,0.019593,125,0.021344,150,0.025398,175,0.030352)}
+.func VthFwd(Tj) {table(Tj,25,-0.68954,50,-0.53558,75,-0.3551,100,0,125,-0.023907,150,0.14995,175,0.30031)}
+
+
+*** Reverse Conduction Parameters ***
+.func nn(Vgs) {table(Vgs,-5,0.57418,-4,0.54355,-3,0.50655,-2,0.46138,-1,0.40881,0,0.34976,1,0.29005,2,0.2347,3,0.18579,4,0.14561,5,0.11598,6,0.1,7,0.1,8,0.1,9,0.1,10,0.1,11,0.1,12,0.1,13,0.1,14,0.1,15,0.1,16,0.1,17,0.1,18,0.1)}
+.func Rs(Vgs) {table(Vgs,-5,0.011006,-4,0.011845,-3,0.013196,-2,0.015113,-1,0.017522,0,0.020304,1,0.022925,2,0.025032,3,0.026522,4,0.027836,5,0.029651,6,0.032786,7,0.036827,8,0.042211,9,0.048896,10,0.05702,11,0.066399,12,0.074926,13,0.086419,14,0.11,15,0.13093,16,0.13732,17,0.14343,18,0.1475)}
+.param Is=10.00m
+.func RdBD(Tj) {table(Tj,25,-0.0012267,50,-0.0014372,75,-0.0012316,100,0,125,-0.00015299,150,0.0013519,175,0.003292)}
+.func VthBD(Tj) {table(Tj,25,-2,50,-2,75,-1.5378,100,0,125,-0.41217,150,0.54099,175,1.3347)}
+
+*** Device Capacitance Values ***
+.func Cds(V) {table(V,0.010,3.116,0.015,3.118,0.022,3.119,0.033,3.114,0.050,3.106,0.075,3.092,0.111,3.070,0.167,3.054,0.249,3.015,0.372,2.962,0.556,2.894,0.831,2.805,1.242,2.682,1.856,2.525,2.774,2.338,4.146,2.127,6.196,1.883,9.260,1.588,13.840,1.153,20.684,0.919,30.913,0.714,46.200,0.574,69.048,0.468,103.195,0.382,154.228,0.313,230.500,0.257,344.491,0.212,514.854,0.176,769.469,0.170,1150.000,0.167)}
+
+.func Cdg(V) {table(V,0.010,1.564,0.015,1.564,0.022,1.555,0.033,1.540,0.050,1.526,0.075,1.497,0.111,1.454,0.167,1.394,0.249,1.312,0.372,1.207,0.556,1.094,0.831,0.985,1.242,0.873,1.856,0.748,2.774,0.625,4.146,0.510,6.196,0.399,9.260,0.283,13.840,0.068,20.684,0.051,30.913,0.036,46.200,0.029,69.048,0.024,103.195,0.021,154.228,0.018,230.500,0.015,344.491,0.013,514.854,0.012,769.469,0.012,1150.000,0.012)}
+
+.func Cgs(V) {table(V,-5.000,5.298,-4.750,4.915,-4.500,4.606,-4.250,4.336,-4.000,4.221,-3.750,4.196,-3.500,4.201,-3.250,4.212,-3.000,4.228,-2.750,4.249,-2.500,4.277,-2.250,4.312,-2.000,4.347,-1.750,4.383,-1.500,4.425,-1.250,4.481,-1.000,4.568,-0.750,4.705,-0.500,4.907,-0.250,5.158,0.000,5.411,0.250,5.637,0.500,5.828,0.750,5.979,1.000,6.117,1.250,6.239,1.500,6.355,1.750,6.465,2.000,6.566,2.250,6.642,2.500,6.708,2.750,6.754,3.000,6.793,3.250,6.820,3.500,6.845,3.750,6.864,4.000,6.881,4.250,6.893,4.500,6.905,4.750,6.915,5.000,6.924,6.000,6.954,7.000,6.976,8.000,6.993,9.000,7.008,10.000,7.020,11.000,7.031,12.000,7.042,13.000,7.051,14.000,7.060,15.000,7.068)}
+
+
+.ENDS 53
+
+.SUBCKT 61 D G S Tj Id
+*** Forward Conduction Model ***
+Gds D s2 Value {V(Fwd)}
+Eds Fwd 0 Value {AF*IdFwd(V(D,s2),V(G,S)+Vths+VthFwd(V(Tj)))}
+GRds s2 S Value {V(s2,S)/((Rdss + RTJ(V(Tj)))/AF)}
+R1 s2 S 1k
+Rbypass D S 1G
+
+.func IdFwd(Vds,Vgs) {a(Vgs)*atan(b(Vgs)*max(Vds,0)) + c(Vgs)*Vds + b(Vgs)*a(Vgs)*min(Vds,0)}
+
+ECurr Id 0 Value {abs(I(Rbd)) + abs(V(Fwd))}
+DBD S d2 IdealDiode
+Rbd d2 D {Rs_ideal/(2*AF)}
+.model IdealDiode D(level=1 Is={AF*Is_ideal} N={n_ideal/((TEMP+273.15)*(0.026/(27+273.15)))} Rs={Rs_ideal/(2*AF)} Tnom={TEMP})
+*** CV Model ***
+
+G_cdg    D    G    Value {(AF*(agd*1e-9*Cdg(V(D,G))+{Cgd_Module}))*ddt(V(D,G))}
+G_cds    d2   S    Value {AF*ads*1e-9*Cds(V(d2,S))*ddt(V(d2,S))}
+G_cgs    G    S    Value {AF*ags*1e-9*Cgs(V(G,S))*ddt(V(G,S))}
+
+**********************************************************************
+********************** Models and Parameters ***********************
+**********************************************************************
+
+
+
+*** Forward Conduction Parameters ***
+.func a(Vgs) {table(Vgs,0,8.3333e-10,0.5,9.97e-09,1,1.1928e-07,1.5,1.4271e-06,2,1.7074e-05,2.5,0.00020427,3,0.0024439,3.5,0.029239,4,0.34981,4.5,0.77628,5,1.5194,5.5,2.6878,6,4.4415,6.5,6.9333,7,10.292,7.5,14.6357,8,20.15,8.5,26.9386,9,35.1106,9.5,44.6845,10,56.003,10.5,67.8842,11,80.8186,11.5,92.7067,12,104.2473,12.5,114.5282,13,124.6607,13.5,133.3149,14,140.8567,14.5,147.7232,15,154.1018,15.5,159.6641,16,164.3289,16.5,170.123,17,175.488,17.5,180.2201,18,185.6562)}
+.func b(Vgs) {table(Vgs,0,1,0.5,1,1,1,1.5,1,2,1,2.5,1,3,1,3.5,1,4,1,4.5,1,5,1,5.5,0.99306,6,0.9662,6.5,0.92061,7,0.86095,7.5,0.78999,8,0.71198,8.5,0.64305,9,0.58326,9.5,0.52984,10,0.47657,10.5,0.4404,11,0.41057,11.5,0.39833,12,0.39309,12.5,0.39913,13,0.4017,13.5,0.41133,14,0.42667,14.5,0.44269,15,0.4586,15.5,0.47485,16,0.48855,16.5,0.48855,17,0.48855,17.5,0.48855,18,0.48855)}
+.func c(Vgs) {table(Vgs,0,0,0.5,0,1,0,1.5,0,2,0,2.5,0,3,8.7718e-05,3.5,0.0002469,4,0.00046812,4.5,0.0008796,5,0.00162,5.5,0.0027135,6,0.0042045,6.5,0.0062194,7,0.0092754,7.5,0.013708,8,0.019053,8.5,0.024989,9,0.0327,9.5,0.040871,10,0.048897,10.5,0.070468,11,0.094808,11.5,0.20315,12,0.36665,12.5,0.62335,13,0.89109,13.5,1.187,14,1.4029,14.5,1.5619,15,1.6261,15.5,1.6645,16,1.6708,16.5,1.6708,17,1.6708,17.5,1.6708,18,1.6708)}
+.func RTJ(Tj) {table(Tj,25,0.015759,50,0.018128,75,0.021312,100,0.029161,125,0.030657,150,0.036784,175,0.044171)}
+.func VthFwd(Tj) {table(Tj,25,-0.84491,50,-0.64017,75,-0.41363,100,0,125,0.0071965,150,0.18129,175,0.34813)}
+
+
+*** Reverse Conduction Parameters ***
+.param Is=10.00m
+.func RdBD(Tj) {table(Tj,25,-0.0030186,50,-0.001859,75,-0.0012461,100,0,125,-0.00030105,150,0.0018382,175,0.0046946)}
+.func VthBD(Tj) {table(Tj,25,-3.9267,50,-1.2667,75,-1.1124,100,0,125,-0.30908,150,0.66002,175,1.5026)}
+
+*** Device Capacitance Values ***
+.func Cds(V) {table(V,0.010,2.290,0.015,2.267,0.022,2.266,0.033,2.267,0.050,2.259,0.075,2.247,0.111,2.232,0.167,2.220,0.249,2.180,0.372,2.149,0.556,2.096,0.831,2.025,1.242,1.936,1.856,1.820,2.774,1.685,4.146,1.529,6.196,1.359,9.260,1.137,13.840,0.830,20.684,0.661,30.913,0.514,46.200,0.413,69.048,0.336,103.195,0.274,154.228,0.225,230.500,0.186,344.491,0.154,514.854,0.129,769.469,0.122,1150.000,0.120)}
+
+.func Cdg(V) {table(V,0.010,1.043,0.015,1.043,0.022,1.039,0.033,1.027,0.050,1.016,0.075,0.997,0.111,0.968,0.167,0.926,0.249,0.872,0.372,0.793,0.556,0.711,0.831,0.633,1.242,0.555,1.856,0.473,2.774,0.391,4.146,0.315,6.196,0.242,9.260,0.158,13.840,0.038,20.684,0.029,30.913,0.021,46.200,0.018,69.048,0.015,103.195,0.013,154.228,0.011,230.500,0.010,344.491,0.009,514.854,0.008,769.469,0.008,1150.000,0.008)}
+
+.func Cgs(V) {table(V,-5.000,3.239,-4.750,3.024,-4.500,2.835,-4.250,2.714,-4.000,2.680,-3.750,2.679,-3.500,2.683,-3.250,2.691,-3.000,2.703,-2.750,2.718,-2.500,2.736,-2.250,2.757,-2.000,2.780,-1.750,2.804,-1.500,2.832,-1.250,2.870,-1.000,2.927,-0.750,3.018,-0.500,3.156,-0.250,3.315,0.000,3.468,0.250,3.615,0.500,3.738,0.750,3.846,1.000,3.944,1.250,4.033,1.500,4.125,1.750,4.210,2.000,4.278,2.250,4.333,2.500,4.375,2.750,4.408,3.000,4.435,3.250,4.457,3.500,4.474,3.750,4.488,4.000,4.502,4.250,4.514,4.500,4.524,4.750,4.533,5.000,4.542,6.000,4.571,7.000,4.595,8.000,4.614,9.000,4.630,10.000,4.643,11.000,4.655,12.000,4.664,13.000,4.672,14.000,4.680,15.000,4.686)}
+
+
+.param Is_ideal=1.000000e-02
+.param n_ideal=5.979439e-01
+.param Rs_ideal=1.528676e-02
+.ENDS 61
+
+.SUBCKT 62 D G S Tj Id
+*** Forward Conduction Model ***
+Gds D s2 Value {V(Fwd)}
+Eds Fwd 0 Value {AF*IdFwd(V(D,s2),V(G,S)+Vths+VthFwd(V(Tj)))}
+GRds s2 S Value {V(s2,S)/((Rdss + RTJ(V(Tj)))/AF)}
+R1 s2 S 1k
+Rbypass D S 1G
+
+.func IdFwd(Vds,Vgs) {a(Vgs)*atan(b(Vgs)*max(Vds,0)) + c(Vgs)*Vds + b(Vgs)*a(Vgs)*min(Vds,0)}
+
+ECurr Id 0 Value {abs(V(Rev)) + abs(V(Fwd))}
+*** Third Quadrant [Without RR] ***
+GRbd D d2 Value {V(D,d2)/((RdBD(V(Tj))+Rs(V(G,S)+VthBD(V(Tj))))/(AF))}
+R2 D d2 1k
+GTQ S d2 Value {V(Rev)}
+ETQ Rev 0 Value {AF*min(Is*(-1+exp(max(V(S,d2),-1n)/(nn(V(G,S)+VthBD(V(Tj)))))),1e6)}
+
+*** CV Model ***
+
+G_cdg    D    G    Value {(AF*(agd*1e-9*Cdg(V(D,G))+{Cgd_Module}))*ddt(V(D,G))}
+G_cds    d2   S    Value {AF*ads*1e-9*Cds(V(d2,S))*ddt(V(d2,S))}
+G_cgs    G    S    Value {AF*ags*1e-9*Cgs(V(G,S))*ddt(V(G,S))}
+
+**********************************************************************
+********************** Models and Parameters ***********************
+**********************************************************************
+
+
+
+*** Forward Conduction Parameters ***
+.func a(Vgs) {table(Vgs,0,8.3333e-10,0.5,9.97e-09,1,1.1928e-07,1.5,1.4271e-06,2,1.7074e-05,2.5,0.00020427,3,0.0024439,3.5,0.029239,4,0.34981,4.5,0.77628,5,1.5194,5.5,2.6878,6,4.4415,6.5,6.9333,7,10.292,7.5,14.6357,8,20.15,8.5,26.9386,9,35.1106,9.5,44.6845,10,56.003,10.5,67.8842,11,80.8186,11.5,92.7067,12,104.2473,12.5,114.5282,13,124.6607,13.5,133.3149,14,140.8567,14.5,147.7232,15,154.1018,15.5,159.6641,16,164.3289,16.5,170.123,17,175.488,17.5,180.2201,18,185.6562)}
+.func b(Vgs) {table(Vgs,0,1,0.5,1,1,1,1.5,1,2,1,2.5,1,3,1,3.5,1,4,1,4.5,1,5,1,5.5,0.99306,6,0.9662,6.5,0.92061,7,0.86095,7.5,0.78999,8,0.71198,8.5,0.64305,9,0.58326,9.5,0.52984,10,0.47657,10.5,0.4404,11,0.41057,11.5,0.39833,12,0.39309,12.5,0.39913,13,0.4017,13.5,0.41133,14,0.42667,14.5,0.44269,15,0.4586,15.5,0.47485,16,0.48855,16.5,0.48855,17,0.48855,17.5,0.48855,18,0.48855)}
+.func c(Vgs) {table(Vgs,0,0,0.5,0,1,0,1.5,0,2,0,2.5,0,3,8.7718e-05,3.5,0.0002469,4,0.00046812,4.5,0.0008796,5,0.00162,5.5,0.0027135,6,0.0042045,6.5,0.0062194,7,0.0092754,7.5,0.013708,8,0.019053,8.5,0.024989,9,0.0327,9.5,0.040871,10,0.048897,10.5,0.070468,11,0.094808,11.5,0.20315,12,0.36665,12.5,0.62335,13,0.89109,13.5,1.187,14,1.4029,14.5,1.5619,15,1.6261,15.5,1.6645,16,1.6708,16.5,1.6708,17,1.6708,17.5,1.6708,18,1.6708)}
+.func RTJ(Tj) {table(Tj,25,0.015759,50,0.018128,75,0.021312,100,0.029161,125,0.030657,150,0.036784,175,0.044171)}
+.func VthFwd(Tj) {table(Tj,25,-0.84491,50,-0.64017,75,-0.41363,100,0,125,0.0071965,150,0.18129,175,0.34813)}
+
+
+*** Reverse Conduction Parameters ***
+.func nn(Vgs) {table(Vgs,-5,0.59794,-4,0.57031,-3,0.53403,-2,0.48856,-1,0.43553,0,0.37485,1,0.31187,2,0.25414,3,0.2025,4,0.16087,5,0.13017,6,0.11154,7,0.10081,8,0.1,9,0.1,10,0.1,11,0.1,12,0.1,13,0.1,14,0.1,15,0.1,16,0.1,17,0.1,18,0.1)}
+.func Rs(Vgs) {table(Vgs,-5,0.015287,-4,0.016303,-3,0.018147,-2,0.020857,-1,0.024225,0,0.028138,1,0.032054,2,0.035078,3,0.037296,4,0.039163,5,0.041606,6,0.046067,7,0.053237,8,0.059569,9,0.067268,10,0.073656,11,0.079819,12,0.087945,13,0.098614,14,0.10982,15,0.12049,16,0.12766,17,0.12627,18,0.12502)}
+.param Is=10.00m
+.func RdBD(Tj) {table(Tj,25,-0.0030186,50,-0.001859,75,-0.0012461,100,0,125,-0.00030105,150,0.0018382,175,0.0046946)}
+.func VthBD(Tj) {table(Tj,25,-3.9267,50,-1.2667,75,-1.1124,100,0,125,-0.30908,150,0.66002,175,1.5026)}
+
+*** Device Capacitance Values ***
+.func Cds(V) {table(V,0.010,2.290,0.015,2.267,0.022,2.266,0.033,2.267,0.050,2.259,0.075,2.247,0.111,2.232,0.167,2.220,0.249,2.180,0.372,2.149,0.556,2.096,0.831,2.025,1.242,1.936,1.856,1.820,2.774,1.685,4.146,1.529,6.196,1.359,9.260,1.137,13.840,0.830,20.684,0.661,30.913,0.514,46.200,0.413,69.048,0.336,103.195,0.274,154.228,0.225,230.500,0.186,344.491,0.154,514.854,0.129,769.469,0.122,1150.000,0.120)}
+
+.func Cdg(V) {table(V,0.010,1.043,0.015,1.043,0.022,1.039,0.033,1.027,0.050,1.016,0.075,0.997,0.111,0.968,0.167,0.926,0.249,0.872,0.372,0.793,0.556,0.711,0.831,0.633,1.242,0.555,1.856,0.473,2.774,0.391,4.146,0.315,6.196,0.242,9.260,0.158,13.840,0.038,20.684,0.029,30.913,0.021,46.200,0.018,69.048,0.015,103.195,0.013,154.228,0.011,230.500,0.010,344.491,0.009,514.854,0.008,769.469,0.008,1150.000,0.008)}
+
+.func Cgs(V) {table(V,-5.000,3.239,-4.750,3.024,-4.500,2.835,-4.250,2.714,-4.000,2.680,-3.750,2.679,-3.500,2.683,-3.250,2.691,-3.000,2.703,-2.750,2.718,-2.500,2.736,-2.250,2.757,-2.000,2.780,-1.750,2.804,-1.500,2.832,-1.250,2.870,-1.000,2.927,-0.750,3.018,-0.500,3.156,-0.250,3.315,0.000,3.468,0.250,3.615,0.500,3.738,0.750,3.846,1.000,3.944,1.250,4.033,1.500,4.125,1.750,4.210,2.000,4.278,2.250,4.333,2.500,4.375,2.750,4.408,3.000,4.435,3.250,4.457,3.500,4.474,3.750,4.488,4.000,4.502,4.250,4.514,4.500,4.524,4.750,4.533,5.000,4.542,6.000,4.571,7.000,4.595,8.000,4.614,9.000,4.630,10.000,4.643,11.000,4.655,12.000,4.664,13.000,4.672,14.000,4.680,15.000,4.686)}
+
+
+.ENDS 62
+
+.SUBCKT 63 D G S Tj Id
+*** Forward Conduction Model ***
+Gds D s2 Value {V(Fwd)}
+Eds Fwd 0 Value {AF*IdFwd(V(D,s2),V(G,S)+Vths+VthFwd(V(Tj)))}
+GRds s2 S Value {V(s2,S)/((Rdss + RTJ(V(Tj)))/AF)}
+R1 s2 S 1k
+Rbypass D S 1G
+
+.func IdFwd(Vds,Vgs) {a(Vgs)*atan(b(Vgs)*max(Vds,0)) + c(Vgs)*Vds + b(Vgs)*a(Vgs)*min(Vds,0)}
+
+ECurr Id 0 Value {abs(V(Rev)) + abs(V(Fwd))}
+*** Third Quadrant [With RR] ***
+GRbd D d2 Value {V(D,d2)/((RdBD(V(Tj))+Rs(V(G,S)+VthBD(V(Tj))))/(AF))}
+R2 D d2 1k
+GI1 0 qm Value {-1/tau(V(Tj))*V(qm)+V(qe,qm)/TM(V(Tj))}
+EV1 qe 0 Value {min((1+TM(V(Tj))/tau(V(Tj)))*Is*tau(V(Tj))*(-1+exp(max(V(S,d2),-1n)/(nn(V(G,S)+VthBD(V(Tj)))))),1e6)}
+GITQ S d2 Value {V(Rev)}
+EITQ Rev 0 Value {AF*V(qe,qm)/TM(V(Tj))}
+C1 qm 0 1
+R3 qm 0 100G
+.func tau(Tj) {1e-9*table(Tj,25,tau1,175,tau2)}
+.func TM(Tj) {1e-9*table(Tj,25,tm1,175,tm2)}
+
+*** CV Model ***
+
+G_cdg    D    G    Value {(AF*(agd*1e-9*Cdg(V(D,G))+{Cgd_Module}))*ddt(V(D,G))}
+G_cds    d2   S    Value {AF*ads*1e-9*Cds(V(d2,S))*ddt(V(d2,S))}
+G_cgs    G    S    Value {AF*ags*1e-9*Cgs(V(G,S))*ddt(V(G,S))}
+
+**********************************************************************
+********************** Models and Parameters ***********************
+**********************************************************************
+
+
+
+*** Forward Conduction Parameters ***
+.func a(Vgs) {table(Vgs,0,8.3333e-10,0.5,9.97e-09,1,1.1928e-07,1.5,1.4271e-06,2,1.7074e-05,2.5,0.00020427,3,0.0024439,3.5,0.029239,4,0.34981,4.5,0.77628,5,1.5194,5.5,2.6878,6,4.4415,6.5,6.9333,7,10.292,7.5,14.6357,8,20.15,8.5,26.9386,9,35.1106,9.5,44.6845,10,56.003,10.5,67.8842,11,80.8186,11.5,92.7067,12,104.2473,12.5,114.5282,13,124.6607,13.5,133.3149,14,140.8567,14.5,147.7232,15,154.1018,15.5,159.6641,16,164.3289,16.5,170.123,17,175.488,17.5,180.2201,18,185.6562)}
+.func b(Vgs) {table(Vgs,0,1,0.5,1,1,1,1.5,1,2,1,2.5,1,3,1,3.5,1,4,1,4.5,1,5,1,5.5,0.99306,6,0.9662,6.5,0.92061,7,0.86095,7.5,0.78999,8,0.71198,8.5,0.64305,9,0.58326,9.5,0.52984,10,0.47657,10.5,0.4404,11,0.41057,11.5,0.39833,12,0.39309,12.5,0.39913,13,0.4017,13.5,0.41133,14,0.42667,14.5,0.44269,15,0.4586,15.5,0.47485,16,0.48855,16.5,0.48855,17,0.48855,17.5,0.48855,18,0.48855)}
+.func c(Vgs) {table(Vgs,0,0,0.5,0,1,0,1.5,0,2,0,2.5,0,3,8.7718e-05,3.5,0.0002469,4,0.00046812,4.5,0.0008796,5,0.00162,5.5,0.0027135,6,0.0042045,6.5,0.0062194,7,0.0092754,7.5,0.013708,8,0.019053,8.5,0.024989,9,0.0327,9.5,0.040871,10,0.048897,10.5,0.070468,11,0.094808,11.5,0.20315,12,0.36665,12.5,0.62335,13,0.89109,13.5,1.187,14,1.4029,14.5,1.5619,15,1.6261,15.5,1.6645,16,1.6708,16.5,1.6708,17,1.6708,17.5,1.6708,18,1.6708)}
+.func RTJ(Tj) {table(Tj,25,0.015759,50,0.018128,75,0.021312,100,0.029161,125,0.030657,150,0.036784,175,0.044171)}
+.func VthFwd(Tj) {table(Tj,25,-0.84491,50,-0.64017,75,-0.41363,100,0,125,0.0071965,150,0.18129,175,0.34813)}
+
+
+*** Reverse Conduction Parameters ***
+.func nn(Vgs) {table(Vgs,-5,0.59794,-4,0.57031,-3,0.53403,-2,0.48856,-1,0.43553,0,0.37485,1,0.31187,2,0.25414,3,0.2025,4,0.16087,5,0.13017,6,0.11154,7,0.10081,8,0.1,9,0.1,10,0.1,11,0.1,12,0.1,13,0.1,14,0.1,15,0.1,16,0.1,17,0.1,18,0.1)}
+.func Rs(Vgs) {table(Vgs,-5,0.015287,-4,0.016303,-3,0.018147,-2,0.020857,-1,0.024225,0,0.028138,1,0.032054,2,0.035078,3,0.037296,4,0.039163,5,0.041606,6,0.046067,7,0.053237,8,0.059569,9,0.067268,10,0.073656,11,0.079819,12,0.087945,13,0.098614,14,0.10982,15,0.12049,16,0.12766,17,0.12627,18,0.12502)}
+.param Is=10.00m
+.func RdBD(Tj) {table(Tj,25,-0.0030186,50,-0.001859,75,-0.0012461,100,0,125,-0.00030105,150,0.0018382,175,0.0046946)}
+.func VthBD(Tj) {table(Tj,25,-3.9267,50,-1.2667,75,-1.1124,100,0,125,-0.30908,150,0.66002,175,1.5026)}
+
+*** Device Capacitance Values ***
+.func Cds(V) {table(V,0.010,2.290,0.015,2.267,0.022,2.266,0.033,2.267,0.050,2.259,0.075,2.247,0.111,2.232,0.167,2.220,0.249,2.180,0.372,2.149,0.556,2.096,0.831,2.025,1.242,1.936,1.856,1.820,2.774,1.685,4.146,1.529,6.196,1.359,9.260,1.137,13.840,0.830,20.684,0.661,30.913,0.514,46.200,0.413,69.048,0.336,103.195,0.274,154.228,0.225,230.500,0.186,344.491,0.154,514.854,0.129,769.469,0.122,1150.000,0.120)}
+
+.func Cdg(V) {table(V,0.010,1.043,0.015,1.043,0.022,1.039,0.033,1.027,0.050,1.016,0.075,0.997,0.111,0.968,0.167,0.926,0.249,0.872,0.372,0.793,0.556,0.711,0.831,0.633,1.242,0.555,1.856,0.473,2.774,0.391,4.146,0.315,6.196,0.242,9.260,0.158,13.840,0.038,20.684,0.029,30.913,0.021,46.200,0.018,69.048,0.015,103.195,0.013,154.228,0.011,230.500,0.010,344.491,0.009,514.854,0.008,769.469,0.008,1150.000,0.008)}
+
+.func Cgs(V) {table(V,-5.000,3.239,-4.750,3.024,-4.500,2.835,-4.250,2.714,-4.000,2.680,-3.750,2.679,-3.500,2.683,-3.250,2.691,-3.000,2.703,-2.750,2.718,-2.500,2.736,-2.250,2.757,-2.000,2.780,-1.750,2.804,-1.500,2.832,-1.250,2.870,-1.000,2.927,-0.750,3.018,-0.500,3.156,-0.250,3.315,0.000,3.468,0.250,3.615,0.500,3.738,0.750,3.846,1.000,3.944,1.250,4.033,1.500,4.125,1.750,4.210,2.000,4.278,2.250,4.333,2.500,4.375,2.750,4.408,3.000,4.435,3.250,4.457,3.500,4.474,3.750,4.488,4.000,4.502,4.250,4.514,4.500,4.524,4.750,4.533,5.000,4.542,6.000,4.571,7.000,4.595,8.000,4.614,9.000,4.630,10.000,4.643,11.000,4.655,12.000,4.664,13.000,4.672,14.000,4.680,15.000,4.686)}
+
+
+.ENDS 63
+
+.SUBCKT 71 D G S Tj Id
+*** Forward Conduction Model ***
+Gds D s2 Value {V(Fwd)}
+Eds Fwd 0 Value {AF*IdFwd(V(D,s2),V(G,S)+Vths+VthFwd(V(Tj)))}
+GRds s2 S Value {V(s2,S)/((Rdss + RTJ(V(Tj)))/AF)}
+R1 s2 S 1k
+Rbypass D S 1G
+
+.func IdFwd(Vds,Vgs) {a(Vgs)*atan(b(Vgs)*max(Vds,0)) + c(Vgs)*Vds + b(Vgs)*a(Vgs)*min(Vds,0)}
+
+ECurr Id 0 Value {abs(I(Rbd)) + abs(V(Fwd))}
+DBD S d2 IdealDiode
+Rbd d2 D {Rs_ideal/(2*AF)}
+.model IdealDiode D(level=1 Is={AF*Is_ideal} N={n_ideal/((TEMP+273.15)*(0.026/(27+273.15)))} Rs={Rs_ideal/(2*AF)} Tnom={TEMP})
+*** CV Model ***
+
+G_cdg    D    G    Value {(AF*(agd*1e-9*Cdg(V(D,G))+{Cgd_Module}))*ddt(V(D,G))}
+G_cds    d2   S    Value {AF*ads*1e-9*Cds(V(d2,S))*ddt(V(d2,S))}
+G_cgs    G    S    Value {AF*ags*1e-9*Cgs(V(G,S))*ddt(V(G,S))}
+
+**********************************************************************
+********************** Models and Parameters ***********************
+**********************************************************************
+
+
+
+*** Forward Conduction Parameters ***
+.func a(Vgs) {table(Vgs,0,1.1111e-09,1,2.1704e-06,2,0.0042396,3,8.2816,4,21.2408,5,36.0426,6,51.9549,7,93.9069,8,147.2095,9,203.0842,10,257.1162,11,309.7811,12,334.9876,13,357.2494,14,365.9696,15,409.5701)}
+.func b(Vgs) {table(Vgs,0,1,1,1,2,1,3,1,4,1,5,1,6,1,7,0.84918,8,0.71704,9,0.59914,10,0.506,11,0.43304,12,0.53684,13,0.60472,14,0.69293,15,0.67871)}
+.func c(Vgs) {table(Vgs,0,0,1,0,2,0.0093561,3,0.03535,4,0.080959,5,0.16768,6,0.63277,7,1.1761,8,2.1841,9,3.2097,10,4.2495,11,4.9174,12,5.5128,13,5.6269,14,5.7152,15,5.7403)}
+.func RTJ(Tj) {table(Tj,25,0.0056691,100,0.0090705,175,0.013604)}
+.func VthFwd(Tj) {table(Tj,25,-1.6129,100,0,175,0.14242)}
+
+
+*** Reverse Conduction Parameters ***
+.param Is=10.00m
+.func RdBD(Tj) {table(Tj,25,-7.0993e-05,100,0,175,0.0010925)}
+.func VthBD(Tj) {table(Tj,25,5.3415e-12,100,0,175,0.39083)}
+
+*** Device Capacitance Values ***
+.func Cds(V) {table(V,0.010,6.150,0.015,6.151,0.022,6.144,0.033,6.132,0.050,6.113,0.075,6.084,0.111,6.039,0.167,5.986,0.249,5.913,0.372,5.806,0.556,5.669,0.831,5.478,1.242,5.229,1.856,4.923,2.774,4.558,4.146,4.143,6.196,3.697,9.260,3.246,13.840,2.631,20.684,2.168,30.913,1.697,46.200,1.254,69.048,0.951,103.195,0.752,154.228,0.606,230.500,0.495,344.491,0.407,514.854,0.347,769.469,0.341,1150.000,0.336)}
+
+.func Cdg(V) {table(V,0.010,3.006,0.015,3.010,0.022,2.997,0.033,2.976,0.050,2.945,0.075,2.899,0.111,2.817,0.167,2.712,0.249,2.568,0.372,2.353,0.556,2.089,0.831,1.802,1.242,1.552,1.856,1.312,2.774,1.074,4.146,0.861,6.196,0.665,9.260,0.479,13.840,0.175,20.684,0.103,30.913,0.082,46.200,0.057,69.048,0.042,103.195,0.034,154.228,0.028,230.500,0.024,344.491,0.020,514.854,0.018,769.469,0.019,1150.000,0.020)}
+
+.func Cgs(V) {table(V,-5.000,4.857,-4.750,4.210,-4.500,3.662,-4.250,3.382,-4.000,3.343,-3.750,3.345,-3.500,3.354,-3.250,3.370,-3.000,3.393,-2.750,3.423,-2.500,3.464,-2.250,3.519,-2.000,3.577,-1.750,3.651,-1.500,3.730,-1.250,3.824,-1.000,3.956,-0.750,4.156,-0.500,4.470,-0.250,4.844,0.000,5.208,0.250,5.590,0.500,5.924,0.750,6.212,1.000,6.497,1.250,6.714,1.500,6.866,1.750,6.989,2.000,7.073,2.250,7.139,2.500,7.187,2.750,7.227,3.000,7.258,3.250,7.283,3.500,7.305,3.750,7.324,4.000,7.340,4.250,7.354,4.500,7.367,4.750,7.378,5.000,7.388,6.000,7.421,7.000,7.444,8.000,7.463,9.000,7.478,10.000,7.491,11.000,7.503,12.000,7.512,13.000,7.521,14.000,7.530,15.000,7.538)}
+
+
+.param Is_ideal=1.000000e-02
+.param n_ideal=4.773757e-01
+.param Rs_ideal=6.113683e-03
+.ENDS 71
+
+.SUBCKT 72 D G S Tj Id
+*** Forward Conduction Model ***
+Gds D s2 Value {V(Fwd)}
+Eds Fwd 0 Value {AF*IdFwd(V(D,s2),V(G,S)+Vths+VthFwd(V(Tj)))}
+GRds s2 S Value {V(s2,S)/((Rdss + RTJ(V(Tj)))/AF)}
+R1 s2 S 1k
+Rbypass D S 1G
+
+.func IdFwd(Vds,Vgs) {a(Vgs)*atan(b(Vgs)*max(Vds,0)) + c(Vgs)*Vds + b(Vgs)*a(Vgs)*min(Vds,0)}
+
+ECurr Id 0 Value {abs(V(Rev)) + abs(V(Fwd))}
+*** Third Quadrant [Without RR] ***
+GRbd D d2 Value {V(D,d2)/((RdBD(V(Tj))+Rs(V(G,S)+VthBD(V(Tj))))/(AF))}
+R2 D d2 1k
+GTQ S d2 Value {V(Rev)}
+ETQ Rev 0 Value {AF*min(Is*(-1+exp(max(V(S,d2),-1n)/(nn(V(G,S)+VthBD(V(Tj)))))),1e6)}
+
+*** CV Model ***
+
+G_cdg    D    G    Value {(AF*(agd*1e-9*Cdg(V(D,G))+{Cgd_Module}))*ddt(V(D,G))}
+G_cds    d2   S    Value {AF*ads*1e-9*Cds(V(d2,S))*ddt(V(d2,S))}
+G_cgs    G    S    Value {AF*ags*1e-9*Cgs(V(G,S))*ddt(V(G,S))}
+
+**********************************************************************
+********************** Models and Parameters ***********************
+**********************************************************************
+
+
+
+*** Forward Conduction Parameters ***
+.func a(Vgs) {table(Vgs,0,1.1111e-09,1,2.1704e-06,2,0.0042396,3,8.2816,4,21.2408,5,36.0426,6,51.9549,7,93.9069,8,147.2095,9,203.0842,10,257.1162,11,309.7811,12,334.9876,13,357.2494,14,365.9696,15,409.5701)}
+.func b(Vgs) {table(Vgs,0,1,1,1,2,1,3,1,4,1,5,1,6,1,7,0.84918,8,0.71704,9,0.59914,10,0.506,11,0.43304,12,0.53684,13,0.60472,14,0.69293,15,0.67871)}
+.func c(Vgs) {table(Vgs,0,0,1,0,2,0.0093561,3,0.03535,4,0.080959,5,0.16768,6,0.63277,7,1.1761,8,2.1841,9,3.2097,10,4.2495,11,4.9174,12,5.5128,13,5.6269,14,5.7152,15,5.7403)}
+.func RTJ(Tj) {table(Tj,25,0.0056691,100,0.0090705,175,0.013604)}
+.func VthFwd(Tj) {table(Tj,25,-1.6129,100,0,175,0.14242)}
+
+
+*** Reverse Conduction Parameters ***
+.func nn(Vgs) {table(Vgs,-5,0.47738,-4,0.45424,-3,0.41812,-2,0.36783,-1,0.30845,0,0.25337,1,0.20924,2,0.17157,3,0.16075,4,0.14914,5,0.12735,6,0.1,7,0.1,8,0.1,9,0.1,10,0.1,11,0.1,12,0.1,13,0.1,14,0.1,15,0.1,16,0.1,17,0.1,18,0.1)}
+.func Rs(Vgs) {table(Vgs,-5,0.0061137,-4,0.0063794,-3,0.0072622,-2,0.0087739,-1,0.010495,0,0.011458,1,0.01143,2,0.011069,3,0.011227,4,0.012506,5,0.014947,6,0.018012,7,0.01976,8,0.019584,9,0.01717,10,0.014477,11,0.01226,12,0.01297,13,0.012761,14,0.012485,15,0.011768,16,0.010597,17,0.0097155,18,0.0090028)}
+.param Is=10.00m
+.func RdBD(Tj) {table(Tj,25,-7.0993e-05,100,0,175,0.0010925)}
+.func VthBD(Tj) {table(Tj,25,5.3415e-12,100,0,175,0.39083)}
+
+*** Device Capacitance Values ***
+.func Cds(V) {table(V,0.010,6.150,0.015,6.151,0.022,6.144,0.033,6.132,0.050,6.113,0.075,6.084,0.111,6.039,0.167,5.986,0.249,5.913,0.372,5.806,0.556,5.669,0.831,5.478,1.242,5.229,1.856,4.923,2.774,4.558,4.146,4.143,6.196,3.697,9.260,3.246,13.840,2.631,20.684,2.168,30.913,1.697,46.200,1.254,69.048,0.951,103.195,0.752,154.228,0.606,230.500,0.495,344.491,0.407,514.854,0.347,769.469,0.341,1150.000,0.336)}
+
+.func Cdg(V) {table(V,0.010,3.006,0.015,3.010,0.022,2.997,0.033,2.976,0.050,2.945,0.075,2.899,0.111,2.817,0.167,2.712,0.249,2.568,0.372,2.353,0.556,2.089,0.831,1.802,1.242,1.552,1.856,1.312,2.774,1.074,4.146,0.861,6.196,0.665,9.260,0.479,13.840,0.175,20.684,0.103,30.913,0.082,46.200,0.057,69.048,0.042,103.195,0.034,154.228,0.028,230.500,0.024,344.491,0.020,514.854,0.018,769.469,0.019,1150.000,0.020)}
+
+.func Cgs(V) {table(V,-5.000,4.857,-4.750,4.210,-4.500,3.662,-4.250,3.382,-4.000,3.343,-3.750,3.345,-3.500,3.354,-3.250,3.370,-3.000,3.393,-2.750,3.423,-2.500,3.464,-2.250,3.519,-2.000,3.577,-1.750,3.651,-1.500,3.730,-1.250,3.824,-1.000,3.956,-0.750,4.156,-0.500,4.470,-0.250,4.844,0.000,5.208,0.250,5.590,0.500,5.924,0.750,6.212,1.000,6.497,1.250,6.714,1.500,6.866,1.750,6.989,2.000,7.073,2.250,7.139,2.500,7.187,2.750,7.227,3.000,7.258,3.250,7.283,3.500,7.305,3.750,7.324,4.000,7.340,4.250,7.354,4.500,7.367,4.750,7.378,5.000,7.388,6.000,7.421,7.000,7.444,8.000,7.463,9.000,7.478,10.000,7.491,11.000,7.503,12.000,7.512,13.000,7.521,14.000,7.530,15.000,7.538)}
+
+
+.ENDS 72
+
+.SUBCKT 73 D G S Tj Id
+*** Forward Conduction Model ***
+Gds D s2 Value {V(Fwd)}
+Eds Fwd 0 Value {AF*IdFwd(V(D,s2),V(G,S)+Vths+VthFwd(V(Tj)))}
+GRds s2 S Value {V(s2,S)/((Rdss + RTJ(V(Tj)))/AF)}
+R1 s2 S 1k
+Rbypass D S 1G
+
+.func IdFwd(Vds,Vgs) {a(Vgs)*atan(b(Vgs)*max(Vds,0)) + c(Vgs)*Vds + b(Vgs)*a(Vgs)*min(Vds,0)}
+
+ECurr Id 0 Value {abs(V(Rev)) + abs(V(Fwd))}
+*** Third Quadrant [With RR] ***
+GRbd D d2 Value {V(D,d2)/((RdBD(V(Tj))+Rs(V(G,S)+VthBD(V(Tj))))/(AF))}
+R2 D d2 1k
+GI1 0 qm Value {-1/tau(V(Tj))*V(qm)+V(qe,qm)/TM(V(Tj))}
+EV1 qe 0 Value {min((1+TM(V(Tj))/tau(V(Tj)))*Is*tau(V(Tj))*(-1+exp(max(V(S,d2),-1n)/(nn(V(G,S)+VthBD(V(Tj)))))),1e6)}
+GITQ S d2 Value {V(Rev)}
+EITQ Rev 0 Value {AF*V(qe,qm)/TM(V(Tj))}
+C1 qm 0 1
+R3 qm 0 100G
+.func tau(Tj) {1e-9*table(Tj,25,tau1,175,tau2)}
+.func TM(Tj) {1e-9*table(Tj,25,tm1,175,tm2)}
+
+*** CV Model ***
+
+G_cdg    D    G    Value {(AF*(agd*1e-9*Cdg(V(D,G))+{Cgd_Module}))*ddt(V(D,G))}
+G_cds    d2   S    Value {AF*ads*1e-9*Cds(V(d2,S))*ddt(V(d2,S))}
+G_cgs    G    S    Value {AF*ags*1e-9*Cgs(V(G,S))*ddt(V(G,S))}
+
+**********************************************************************
+********************** Models and Parameters ***********************
+**********************************************************************
+
+
+
+*** Forward Conduction Parameters ***
+.func a(Vgs) {table(Vgs,0,1.1111e-09,1,2.1704e-06,2,0.0042396,3,8.2816,4,21.2408,5,36.0426,6,51.9549,7,93.9069,8,147.2095,9,203.0842,10,257.1162,11,309.7811,12,334.9876,13,357.2494,14,365.9696,15,409.5701)}
+.func b(Vgs) {table(Vgs,0,1,1,1,2,1,3,1,4,1,5,1,6,1,7,0.84918,8,0.71704,9,0.59914,10,0.506,11,0.43304,12,0.53684,13,0.60472,14,0.69293,15,0.67871)}
+.func c(Vgs) {table(Vgs,0,0,1,0,2,0.0093561,3,0.03535,4,0.080959,5,0.16768,6,0.63277,7,1.1761,8,2.1841,9,3.2097,10,4.2495,11,4.9174,12,5.5128,13,5.6269,14,5.7152,15,5.7403)}
+.func RTJ(Tj) {table(Tj,25,0.0056691,100,0.0090705,175,0.013604)}
+.func VthFwd(Tj) {table(Tj,25,-1.6129,100,0,175,0.14242)}
+
+
+*** Reverse Conduction Parameters ***
+.func nn(Vgs) {table(Vgs,-5,0.47738,-4,0.45424,-3,0.41812,-2,0.36783,-1,0.30845,0,0.25337,1,0.20924,2,0.17157,3,0.16075,4,0.14914,5,0.12735,6,0.1,7,0.1,8,0.1,9,0.1,10,0.1,11,0.1,12,0.1,13,0.1,14,0.1,15,0.1,16,0.1,17,0.1,18,0.1)}
+.func Rs(Vgs) {table(Vgs,-5,0.0061137,-4,0.0063794,-3,0.0072622,-2,0.0087739,-1,0.010495,0,0.011458,1,0.01143,2,0.011069,3,0.011227,4,0.012506,5,0.014947,6,0.018012,7,0.01976,8,0.019584,9,0.01717,10,0.014477,11,0.01226,12,0.01297,13,0.012761,14,0.012485,15,0.011768,16,0.010597,17,0.0097155,18,0.0090028)}
+.param Is=10.00m
+.func RdBD(Tj) {table(Tj,25,-7.0993e-05,100,0,175,0.0010925)}
+.func VthBD(Tj) {table(Tj,25,5.3415e-12,100,0,175,0.39083)}
+
+*** Device Capacitance Values ***
+.func Cds(V) {table(V,0.010,6.150,0.015,6.151,0.022,6.144,0.033,6.132,0.050,6.113,0.075,6.084,0.111,6.039,0.167,5.986,0.249,5.913,0.372,5.806,0.556,5.669,0.831,5.478,1.242,5.229,1.856,4.923,2.774,4.558,4.146,4.143,6.196,3.697,9.260,3.246,13.840,2.631,20.684,2.168,30.913,1.697,46.200,1.254,69.048,0.951,103.195,0.752,154.228,0.606,230.500,0.495,344.491,0.407,514.854,0.347,769.469,0.341,1150.000,0.336)}
+
+.func Cdg(V) {table(V,0.010,3.006,0.015,3.010,0.022,2.997,0.033,2.976,0.050,2.945,0.075,2.899,0.111,2.817,0.167,2.712,0.249,2.568,0.372,2.353,0.556,2.089,0.831,1.802,1.242,1.552,1.856,1.312,2.774,1.074,4.146,0.861,6.196,0.665,9.260,0.479,13.840,0.175,20.684,0.103,30.913,0.082,46.200,0.057,69.048,0.042,103.195,0.034,154.228,0.028,230.500,0.024,344.491,0.020,514.854,0.018,769.469,0.019,1150.000,0.020)}
+
+.func Cgs(V) {table(V,-5.000,4.857,-4.750,4.210,-4.500,3.662,-4.250,3.382,-4.000,3.343,-3.750,3.345,-3.500,3.354,-3.250,3.370,-3.000,3.393,-2.750,3.423,-2.500,3.464,-2.250,3.519,-2.000,3.577,-1.750,3.651,-1.500,3.730,-1.250,3.824,-1.000,3.956,-0.750,4.156,-0.500,4.470,-0.250,4.844,0.000,5.208,0.250,5.590,0.500,5.924,0.750,6.212,1.000,6.497,1.250,6.714,1.500,6.866,1.750,6.989,2.000,7.073,2.250,7.139,2.500,7.187,2.750,7.227,3.000,7.258,3.250,7.283,3.500,7.305,3.750,7.324,4.000,7.340,4.250,7.354,4.500,7.367,4.750,7.378,5.000,7.388,6.000,7.421,7.000,7.444,8.000,7.463,9.000,7.478,10.000,7.491,11.000,7.503,12.000,7.512,13.000,7.521,14.000,7.530,15.000,7.538)}
+
+
+.ENDS 73
+
+
+
+**********************************************************************
+******************** SiC Schottky Models *****************************
+**********************************************************************
+*** SiC Schottky Diode Model ***
+*CPW6-1200-Z050A
+
+.SUBCKT 101 A K Tj Id
+
+** Conduction **
+GRbd a1 K Value {V(a1,K)/((Rs(V(Tj)))/AF)}
+Rbypass1 a1 K 1k
+Rbypass2 A K 1G
+GDiode A a1 Value {V(N)}
+EDiode N 0 Value {AF*min(Is*(-1+exp(max(V(A,a1),-1n)/(nn(V(Tj))))),1e6)}
+** Capacitance **
+G_CJ A a1 Value {AF*1e-9*Cj(V(a1,A))*ddt(V(A,a1))}
+
+Ecurr Id 0 Value {V(N)}
+
+.param Is = 1e-06
+.func nn(Tj) {table(Tj,25,0.05747,75,0.054122,125,0.050427,175,0.047078)}
+.func Rs(Tj) {table(Tj,25,0.0090095,75,0.01181,125,0.015863,175,0.02094)}
+
+.func Cj(V) {table(V,0.0010,4.3938,0.0016,4.3933,0.0026,4.3926,0.0043,4.3914,0.0069,4.3895,0.0112,4.3864,0.0181,4.3813,0.0293,4.3731,0.0475,4.3599,0.0770,4.3384,0.1248,4.3035,0.2023,4.2150,0.3277,4.0832,0.5311,3.8945,0.8606,3.6466,1.3945,3.3299,2.2596,2.9618,3.6615,2.5628,5.9331,2.1609,9.6142,1.7864,15.5790,1.4551,25.2444,1.1339,40.9065,0.8111,66.2857,0.6079,107.4105,0.4685,174.0498,0.3651,282.0333,0.2865,457.0118,0.2265,740.5499,0.1928,1200.0000,0.1907)}
+
+.ENDS 101
+*** SiC Schottky Diode Model ***
+*CPW6-1700-Z050A
+
+.SUBCKT 102 A K Tj Id
+
+** Conduction **
+GRbd a1 K Value {V(a1,K)/((Rs(V(Tj)))/AF)}
+Rbypass1 a1 K 1k
+Rbypass2 A K 1G
+GDiode A a1 Value {V(N)}
+EDiode N 0 Value {AF*min(Is*(-1+exp(max(V(A,a1),-1n)/(nn(V(Tj))))),1e6)}
+** Capacitance **
+G_CJ A a1 Value {AF*1e-9*Cj(V(a1,A))*ddt(V(A,a1))}
+
+Ecurr Id 0 Value {V(N)}
+
+.param Is = 1e-06
+.func nn(Tj) {table(Tj,25,0.056241,75,0.052507,125,0.048934,175,0.051447)}
+.func Rs(Tj) {table(Tj,25,0.009767,75,0.013228,125,0.017929,175,0.022621)}
+
+.func Cj(V) {table(V,0.0010,5.9067,0.0016,5.9066,0.0026,5.9063,0.0043,5.9059,0.0069,5.9052,0.0112,5.9041,0.0181,5.9024,0.0293,5.8995,0.0475,5.8948,0.0770,5.8873,0.1248,5.8508,0.2023,5.7541,0.3277,5.6057,0.5311,5.3997,0.8606,5.1030,1.3945,4.7105,2.2596,4.2477,3.6615,3.7294,5.9331,3.2006,9.6142,2.6984,15.5790,2.2437,25.2444,1.8363,40.9065,1.4578,66.2857,0.9332,107.4105,0.6621,174.0498,0.4950,282.0333,0.3787,457.0118,0.2945,740.5499,0.2556,1200.0000,0.2535)}
+
+.ENDS 102
